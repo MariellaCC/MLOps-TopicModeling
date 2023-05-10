@@ -65,7 +65,7 @@ query = f"SELECT * FROM sources WHERE date <= DATE '{date_ref_2}' AND date > DAT
 
 subset_df = duckdb.query(query).df()
 
-# read the content of the text files
+# read the content of the text files + encoding utf-8'
 def readTxtContent(fileName):
   with open(folder_path + fileName, 'r', encoding='utf-8') as file:
     return ' ' + file.read().replace('\n', ' ') + ' '
