@@ -50,7 +50,7 @@ def get_files_list(folder_path):
     files_list = []
     for pub in publications_list:
         files = os.listdir(os.path.join(folder_path, pub))
-        files = [os.path.join(pub, file) for file in files]  # Extract relative path
+        files = [os.path.join(pub, file) for file in files]
         files_list.append(files)
 
     files_list_flat = [item for sublist in files_list for item in sublist]
@@ -149,4 +149,3 @@ subset_df = preprocess_data(folder_name, pub_refs, pub_names, date_ref_1, date_r
 
 # Save the subset dataframe to a CSV file
 subset_df.to_csv('subset.csv')
-
