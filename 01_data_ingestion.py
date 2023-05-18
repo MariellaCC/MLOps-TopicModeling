@@ -29,7 +29,10 @@ The code above performs the following steps:
 17. Finally, the subset_df DataFrame is saved to a CSV file named 'subset.csv' using the to_csv method.
 
 """
-
+import os
+import re
+import pandas as pd
+import duckdb
 
 def get_files_list(folder_path):
     """
@@ -134,6 +137,12 @@ def preprocess_data(folder_name, pub_refs, pub_names, date_ref_1, date_ref_2):
 
     return subset_df
 
+# indicate name of the folder containing data, for example 'data_tm_workflow'
+folder_name = 'CI_newspaper_subcorpora'
+pub_refs = ["2012271201", "sn85054967", "sn93053873", "sn85066408", "sn85055164", "sn84037024", "sn84037025", "sn84020351", "sn86092310", "sn92051386"]
+pub_names = ["Cronaca_Sovversiva", "Il_Patriota", "L'Indipendente", "L'Italia", "La_Libera_Parola", "La_Ragione", "La_Rassegna", "La_Sentinella", "La_Sentinella_del_West", "La_Tribuna_del_Connecticut"]
+date_ref_1 = "1903-06-06"
+date_ref_2 = "1919-05-01"
 
 # Preprocess the data and obtain the subset dataframe
 subset_df = preprocess_data(folder_name, pub_refs, pub_names, date_ref_1, date_ref_2)
