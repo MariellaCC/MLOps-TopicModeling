@@ -8,7 +8,7 @@
 
 
 """
-The code above performs the following steps:
+The code performs the following steps:
 
 1. The preprocess_data function takes the folder name, publication references, publication names, start date, and end date as inputs. It processes the data by extracting information from files and performing filtering.
 2. The get_files_list function returns a flattened list of file paths in the specified folder, excluding '.DS_Store' files.
