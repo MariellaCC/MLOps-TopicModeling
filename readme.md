@@ -69,6 +69,9 @@ Incorporate monitoring tools or services to monitor the deployed application, tr
 • Include appropriate testing steps, such as unit tests for the individual scripts, integration tests for the API endpoints, and performance/load testing for the deployed application.
 
 
+<img width="679" alt="image" src="https://github.com/MariellaCC/MLOps-TopicModeling/assets/83060092/4d221c25-93f2-42bc-b260-f3d355d591b6">
+
+
 ## References
 
 1. Viola, Lorella and de Crouy-Chanel, Mariella. 2020. Topic Modelling with Gensim. A workflow for the Humanities (v. 1.0.0). University of Luxembourg. https://github.com/DHARPA-Project/TopicModelling-
