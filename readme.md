@@ -43,7 +43,7 @@ As an underlying workflow, we selected the project <i>Topic Modelling with Gensi
 8. Monitoring and Error Handling:???
 • Implement logging and error handling mechanisms in the project scripts to capture relevant information and handle exceptions gracefully.
 • Utilize Airflow's built-in logging capabilities to track task execution and capture log outputs.
-Incorporate monitoring tools or services to monitor the deployed application, track performance metrics, and detect potential issues.![image](https://github.com/MariellaCC/MLOps-TopicModeling/assets/83060092/c88f2797-95d7-4798-b495-19779afb831a)
+Incorporate monitoring tools or services to monitor the deployed application, track performance metrics, and detect potential issues
 9. API Development with FastAPI:???
 • Create a new Python script to define the FastAPI application.
 • Use FastAPI to define the API endpoints that will interact with the trained model.
@@ -67,8 +67,6 @@ Incorporate monitoring tools or services to monitor the deployed application, tr
 • Configure a CI/CD tool (e.g., Jenkins, GitLab CI/CD, CircleCI) to monitor changes in the project repository and trigger the pipeline accordingly.
 • Define stages within the CI/CD pipeline, such as linting, unit testing, building Docker images, pushing images to a container registry, and deploying to the Kubernetes cluster.
 • Include appropriate testing steps, such as unit tests for the individual scripts, integration tests for the API endpoints, and performance/load testing for the deployed application.
-![image](https://github.com/MariellaCC/MLOps-TopicModeling/assets/83060092/67ce6910-2930-4f99-b99e-e053a1605660)
-
 
 
 ## References
