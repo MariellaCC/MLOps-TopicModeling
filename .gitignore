@@ -1,1 +1,6 @@
-*.csv
+/CI_newspaper_subcorpora
+/__pycache__
+/.vscode
+/old
+/reference
+/Topic
