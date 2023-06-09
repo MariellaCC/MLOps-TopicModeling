@@ -3,8 +3,8 @@ import gensim
 from gensim.models import LdaModel
 from gensim.models.coherencemodel import CoherenceModel
 from nltk.corpus import stopwords
-from fastapi import FastAPI
-from fastapi import Header
+from fastapi import FastAPI, Depends, HTTPException, status, Header
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel
 import pandas as pd 
 import numpy as np 
@@ -18,24 +18,49 @@ from pre_processing import load_data,tokenize_documents, preprocess_tokens, load
 from kpi import load_corpus_model, preprocess_data_kpi, load_lda_model, calculate_coherence
 import nltk 
 import duckdb
+import secrets
+from typing import Annotated
 
 nltk.download('punkt')
 nltk.download('stopwords')
 
 app = FastAPI()
+security = HTTPBasic()
+
+def get_current_username(
+    credentials: Annotated[HTTPBasicCredentials, Depends(security)]
+):
+    current_username_bytes = credentials.username.encode("utf8")
+    correct_username_bytes = b"admin"
+    is_correct_username = secrets.compare_digest(
+        current_username_bytes, correct_username_bytes
+    )
+    current_password_bytes = credentials.password.encode("utf8")
+    correct_password_bytes = b"mdp"
+    is_correct_password = secrets.compare_digest(
+        current_password_bytes, correct_password_bytes
+    )
+    if not (is_correct_username and is_correct_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    return credentials.username
 
 folder_name = 'CI_newspaper_subcorpora'
 pub_refs = ["2012271201", "sn85054967", "sn93053873", "sn85066408", "sn85055164", "sn84037024", "sn84037025", "sn84020351", "sn86092310", "sn92051386"]
 pub_names = ["Cronaca_Sovversiva", "Il_Patriota", "L'Indipendente", "L'Italia", "La_Libera_Parola", "La_Ragione", "La_Rassegna", "La_Sentinella", "La_Sentinella_del_West", "La_Tribuna_del_Connecticut"]
 
 class topic(BaseModel):
-    num_topic: int = 10
-    date_ref_1 :str = "1903-06-06"
-    date_ref_2 : str = "1919-05-01"
+    num_topic: int = 2
+    date_ref_1 :str = "1930-06-06"
+    date_ref_2 : str = "1931-05-01"
 
 class database(BaseModel):
     pub_refs: str 
     pub_names: str 
+
 
 @app.get('/')
 def Say_hello():
@@ -44,7 +69,7 @@ def Say_hello():
     return "Hello, I'm working"
 
 @app.post('/topic')
-def get_topic(topic:topic):
+def get_topic(topic:topic,username: Annotated[str, Depends(get_current_username)]):
     #data ingestion
     
     subset_df = preprocess_data(folder_name, pub_refs, pub_names, topic.date_ref_1, topic.date_ref_2)

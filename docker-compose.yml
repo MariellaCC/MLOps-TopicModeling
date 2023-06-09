@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+
+  start_api:
+    image: api:latest
+    container_name: start
+    networks:
+      - my_test_network
+
+
+
+  Test_authentification:
+    depends_on:
+      - start_api           
+    image: test:latest
+    container_name: test1
+    networks:
+      - my_test_network
+    environment:
+      - LOG='1'
+
+
+     
+networks:
+  my_test_network:
