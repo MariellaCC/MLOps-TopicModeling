@@ -68,6 +68,7 @@ def get_date(file):
     date_match = re.findall(r'_(\d{4}-\d{2}-\d{2})_', file)
     return date_match[0]
 
+
 def read_txt_content(file_path):
     """
     Reads and returns the content of a text file.
@@ -102,7 +103,6 @@ def create_dataset(folder_name, pub_refs, pub_names):
     sources['date'] = sources['file_name'].apply(get_date)
     sources['publication_ref'] = sources['file_name'].apply(get_ref)
     sources['publication_name'] = sources['publication_ref'].replace(pub_refs, pub_names)
-    # sources['file_name'] = sources['file_name'].apply(lambda x: '/' + x.replace("\\", "/"))  
     sources['file_content'] = sources['file_name'].apply(lambda x: read_txt_content(os.path.join(folder_path, x.lstrip('/'))))
 
     return sources
@@ -125,10 +125,15 @@ def corpus_to_db(sources_df):
     
     try:
 
-        sources_df.to_sql('Journals', con=engine, if_exists='replace')
+        # add dataframe to table
+        sources_df.to_sql('sources', con=engine, if_exists='replace')
+
+         # check length of the dataset to make sure to have same length when creating db
+        print(len(sources_df))
 
     
     except Exception as e:
+        
         print(e)
         error_logs.append(e)
     
