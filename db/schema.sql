@@ -6,5 +6,5 @@ CREATE TABLE `Journals` (
   `FileName` varchar(255) NOT NULL,
   `TextContent` text,
   `TextDate` varchar(10),
-  `PubRef` varchar,
+  `PubRef` varchar(255)
 );

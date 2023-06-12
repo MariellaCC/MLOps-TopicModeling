@@ -2,12 +2,23 @@ import mysql.connector
 import os
 import re
 import pandas as pd
+from sqlalchemy import URL, create_engine
 
-mydb = mysql.connector.connect(
-  host="localhost",
-  user="root",
-  password="password"
+# mydb = mysql.connector.connect(
+#   host="localhost",
+#   user="root",
+#   password="password"
+# )
+
+url_object = URL.create(
+    "mysql+pymysql",
+    username="root",
+    password="password",
+    host="localhost",
+    database="DB",
 )
+
+engine = create_engine(url_object)
 
 folder_name = 'CI_newspaper_subcorpora'
 pub_refs = ["2012271201", "sn85054967", "sn93053873", "sn85066408", "sn85055164", "sn84037024", "sn84037025", "sn84020351", "sn86092310", "sn92051386"]
@@ -119,20 +130,12 @@ def corpus_to_db(sources_df):
     error_logs = []
     
     try:
-        cur = mydb.cursor()
-        cur.execute("USE DB")
-        
-        # sources_df.to_sql(con=cur, name='journals', if_exists='replace', flavor='mysql')
 
-        for index, row in sources_df.iterrows():
-            sql_stmt = f"INSERT INTO Journals(FileName, TextContent, TextDate, PubRef) VALUES('{sources_df['file_name']}', '{sources_df['file_content']}', '{sources_df['file_date']}, '{sources_df['file_ref']}')"
-            cur.execute(sql_stmt)
-            mydb.commit()
-        cur.close()
-        mydb.close()
+        sources_df.to_sql('Journals', con=engine, if_exists='replace')
 
     
     except Exception as e:
+        print(e)
         error_logs.append(e)
     
     return error_logs
@@ -140,54 +143,3 @@ def corpus_to_db(sources_df):
 
 sources_df = create_dataset(folder_name, pub_refs, pub_names)
 corpus_to_db(sources_df)
-
-
-
-# from StringIO import StringIO
-# from zipfile import ZipFile
-# from urllib import urlopen
-
-# corpus_url = 'https://zenodo.org/record/4596345/files/ChroniclItaly_3.0_original.zip'
-
-# def corpus_url_to_db(zipped_corpus):
-    
-#     """
-#     Adds records to database from zenodo zipped files.
-
-#     Args:
-#         zipped_corpus (str): Url to zipped corpus.
-
-#     Returns:
-#         list: List of potential errors if any.
-#     """
-
-#     error_logs = []
-#     unzipped_string = ''
-#     file_name = ''
-    
-#     try:
-#         cur = mydb.cursor()
-#         cur.execute("USE DB")
-        
-#         zipfile = ZipFile(StringIO(zipped_corpus))
-        
-#         for name in zipfile.namelist():
-#             if '.DS_Store' not in name:
-#                 file_name = name
-#                 file_content = read_txt_content(name)
-#                 file_date = get_date(name)
-#                 file_ref = get_ref(name)
-
-#                 sql_stmt = f"INSERT INTO Journals(FileName, TextContent, TextDate, PubRef) VALUES('{file_name}', '{file_content}', '{file_date}, '{file_ref}')"
-
-#                 cur.execute(sql_stmt)
-
-#                 mydb.commit()
-#         cur.close()
-#         mydb.close()
-
-    
-#     except Exception as e:
-#         error_logs.append(e)
-    
-#     return error_logs
