@@ -1,14 +1,8 @@
-import mysql.connector
 import os
 import re
 import pandas as pd
 from sqlalchemy import URL, create_engine
 
-# mydb = mysql.connector.connect(
-#   host="localhost",
-#   user="root",
-#   password="password"
-# )
 
 url_object = URL.create(
     "mysql+pymysql",

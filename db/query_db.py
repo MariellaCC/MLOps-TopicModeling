@@ -1,20 +1,26 @@
-import mysql.connector
 import pandas as pd
+from sqlalchemy import URL, create_engine, inspect, text
 
-mydb = mysql.connector.connect(
-  host="localhost",
-  user="root",
-  password="password"
+url_object = URL.create(
+    "mysql+pymysql",
+    username="root",
+    password="password",
+    host="localhost",
+    database="DB",
 )
 
-cur = mydb.cursor()
-cur.execute("USE DB")
+engine = create_engine(url_object)
 
-sql_stmt = f"SELECT * FROM Journals"
-cur.execute(sql_stmt)
-response = cur.fetchall()
-for row in response[0:5]:
-    print(row)
-cur.close()
-mydb.close()
+inspector = inspect(engine)
+
+db_cols = inspector.get_columns('Journals')
+print(db_cols)
+
+query = text('SELECT COUNT(*) FROM Journals')
+
+with engine.connect() as conn:
+    result = conn.execute(query)
+    for row in result:
+        print(row)
+
        
