@@ -13,6 +13,7 @@ from ast import literal_eval
 from gensim import corpora
 import os
 import re 
+from sqlalchemy import URL, create_engine, inspect, text
 from data_ingestion import read_txt_content, get_date, get_ref, get_files_list, preprocess_data
 from pre_processing import load_data,tokenize_documents, preprocess_tokens, load_stopwords, remove_stopwords, create_bigrams, save_dataframe
 from kpi import load_corpus_model, preprocess_data_kpi, load_lda_model, calculate_coherence
@@ -20,9 +21,28 @@ import nltk
 import duckdb
 import secrets
 from typing import Annotated
+import mysql.connector
+
 
 nltk.download('punkt')
 nltk.download('stopwords')
+
+url_object = URL.create(
+    "mysql+pymysql",
+    username="root",
+    password="password",
+    host="localhost",
+    database="DB",
+)
+engine = create_engine(url_object)
+
+connection = mysql.connector.connect(username="root",
+    password="password",
+    host="localhost",
+    database="DB"
+    )
+cursor = connection.cursor()
+
 
 app = FastAPI()
 security = HTTPBasic()
@@ -48,18 +68,21 @@ def get_current_username(
         )
     return credentials.username
 
-folder_name = 'CI_newspaper_subcorpora'
-pub_refs = ["2012271201", "sn85054967", "sn93053873", "sn85066408", "sn85055164", "sn84037024", "sn84037025", "sn84020351", "sn86092310", "sn92051386"]
-pub_names = ["Cronaca_Sovversiva", "Il_Patriota", "L'Indipendente", "L'Italia", "La_Libera_Parola", "La_Ragione", "La_Rassegna", "La_Sentinella", "La_Sentinella_del_West", "La_Tribuna_del_Connecticut"]
-
 class topic(BaseModel):
     num_topic: int = 2
     date_ref_1 :str = "1930-06-06"
     date_ref_2 : str = "1931-05-01"
 
 class database(BaseModel):
-    pub_refs: str 
-    pub_names: str 
+    file_name: str = 'b'
+    file_content: str = 'b'
+    date: str = 'b'
+    publication_name: str = 'b'
+    publication_ref: str = 'b'
+
+class read_db(BaseModel):
+    date: str = '1930-12-20'
+ 
 
 
 @app.get('/')
@@ -68,15 +91,34 @@ def Say_hello():
          
     return "Hello, I'm working"
 
+@app.post('/text')
+def get_body_from_publication(read_db:read_db):
+    query = text(f"SELECT * FROM sources WHERE date = '{read_db.date}'")
+    with engine.connect() as conn:
+        result = conn.execute(query)
+    lis=[]
+    for row in result:
+        lis.append(row)
+    corps=[]
+    file_name =[]
+    for i in range (len(lis)):    
+        corps.append(lis[i][5])
+    for i in range (len(lis)): 
+        file_name.append(lis[i][1])
+    dic = { file_name[i] : corps[i]  for i in range (len(lis))}
+    return dic
+
+
 @app.post('/topic')
 def get_topic(topic:topic,username: Annotated[str, Depends(get_current_username)]):
     #data ingestion
     
-    subset_df = preprocess_data(folder_name, pub_refs, pub_names, topic.date_ref_1, topic.date_ref_2)
-    subset_df.to_csv('subset.csv')
-
+    #subset_df = preprocess_data(folder_name, pub_refs, pub_names, topic.date_ref_1, topic.date_ref_2)
+    #subset_df.to_csv('subset.csv')
+    query = text(f"SELECT * FROM sources WHERE date <= DATE '{topic.date_ref_2}' AND date > DATE '{topic.date_ref_1}'")
+    corpus_df = pd.read_sql_query(query, engine) 
     #pre process
-    corpus_df = load_data('subset.csv')
+    #corpus_df = load_data('subset.csv')
     corpus_df = tokenize_documents(corpus_df, 'file_content')
     corpus_df = preprocess_tokens(corpus_df, 'tokens')
     stopwords = load_stopwords('stop_words.csv')
@@ -103,9 +145,12 @@ def get_topic(topic:topic,username: Annotated[str, Depends(get_current_username)
     return {'topic':dic, 'coherence':coherence_value}
 
 @app.put('/database')
-def add_data(new:database):
-
-    """ l'idée est de rajouter un fichier directement dans la base de donnée"""
-   
-    return {'test':'hi'}
+def add_data(database:database):
+    query2 = f"""INSERT INTO sources (file_name,file_content,date,publication_name,publication_ref) VALUES ('{database.file_name}','{database.file_content}','{database.date}','{database.publication_name}','{database.publication_ref}')"""
+    cursor.execute(query2)
+    connection.commit()
+    cursor.close()
+    return{cursor.rowcount: "Record inserted successfully into Laptop table"}
+    
+    
 
