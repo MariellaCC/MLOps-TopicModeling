@@ -4,3 +4,5 @@
 /old
 /reference
 /Topic
+/.pytest_cache
+/db/CI_newspaper_subcorpora
