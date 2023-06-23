@@ -1,2 +1,13 @@
+
+/CI_newspaper_subcorpora
+/__pycache__
+/.vscode
+/old
+/reference
+/Topic
+/.pytest_cache
+/db/CI_newspaper_subcorpora
+=======
 *.csv
 *.txt
+
