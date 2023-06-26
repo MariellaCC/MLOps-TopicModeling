@@ -95,7 +95,7 @@ def read_txt_content(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         return ' ' + file.read().replace('\n', ' ') + ' '
 
-def preprocess_data(folder_name, pub_refs, pub_names, date_ref_1, date_ref_2):
+def preprocess_data(folder_name, pub_refs, pub_names, set_size):
     """
     Preprocesses the data by extracting information from files and performing filtering.
 
@@ -103,8 +103,10 @@ def preprocess_data(folder_name, pub_refs, pub_names, date_ref_1, date_ref_2):
         folder_name (str): Name of the folder containing the files.
         pub_refs (dict): Dictionary mapping publication references.
         pub_names (dict): Dictionary mapping publication names.
-        date_ref_1 (str): Start date for filtering.
-        date_ref_2 (str): End date for filtering.
+        set_size (int): percentage of data to use for the train dataset
+        These are not used anymore, as we are creating instead a train dataset
+        # date_ref_1 (str): Start date for filtering.
+        # date_ref_2 (str): End date for filtering.
 
     Returns:
         pandas.DataFrame: Preprocessed data subset.
@@ -117,35 +119,38 @@ def preprocess_data(folder_name, pub_refs, pub_names, date_ref_1, date_ref_2):
     sources['publication_ref'] = sources['file_name'].apply(get_ref)
     sources["date"] = pd.to_datetime(sources["date"])
     sources['publication_name'] = sources['publication_ref'].replace(pub_refs, pub_names)
+    sources.sort_values(by='date', inplace=True)
+    sources_train = sources.head(int(len(sources)*(set_size/100)))
+
 
     # Establish connection to DuckDB
-    conn = duckdb.connect(database=':memory:')
+    # conn = duckdb.connect(database=':memory:')
 
     # Create DuckDB table
-    conn.register('sources', sources)
+    # conn.register('sources', sources)
 
-    query = f"SELECT * FROM sources WHERE date <= DATE '{date_ref_2}' AND date > DATE '{date_ref_1}'"
+    # query = f"SELECT * FROM sources WHERE date <= DATE '{date_ref_2}' AND date > DATE '{date_ref_1}'"
 
     # Execute the query and fetch the result as a DataFrame
-    subset_df = conn.execute(query).fetchdf()
+    # subset_df = conn.execute(query).fetchdf()
 
-    subset_df['file_name'] = subset_df['file_name'].apply(lambda x: '/' + x.replace("\\", "/"))  
+    sources_train['file_name'] = sources_train['file_name'].apply(lambda x: '/' + x.replace("\\", "/"))  
 
-    subset_df['file_content'] = subset_df['file_name'].apply(lambda x: read_txt_content(os.path.join(folder_path, x.lstrip('/'))))
-    subset_df['chars_count'] = subset_df['file_content'].apply(len)
-    subset_df['words_count'] = subset_df['file_content'].apply(lambda x: len(x.split()))
+    sources_train['file_content'] = sources_train['file_name'].apply(lambda x: read_txt_content(os.path.join(folder_path, x.lstrip('/'))))
+    # subset_df['chars_count'] = subset_df['file_content'].apply(len)
+    # subset_df['words_count'] = subset_df['file_content'].apply(lambda x: len(x.split()))
 
-    return subset_df
+    return sources_train
 
 # indicate name of the folder containing data, for example 'data_tm_workflow'
 folder_name = 'CI_newspaper_subcorpora'
 pub_refs = ["2012271201", "sn85054967", "sn93053873", "sn85066408", "sn85055164", "sn84037024", "sn84037025", "sn84020351", "sn86092310", "sn92051386"]
 pub_names = ["Cronaca_Sovversiva", "Il_Patriota", "L'Indipendente", "L'Italia", "La_Libera_Parola", "La_Ragione", "La_Rassegna", "La_Sentinella", "La_Sentinella_del_West", "La_Tribuna_del_Connecticut"]
-date_ref_1 = "1903-06-06"
-date_ref_2 = "1919-05-01"
+# date_ref_1 = "1903-06-06"
+# date_ref_2 = "1919-05-01"
 
 # Preprocess the data and obtain the subset dataframe
-subset_df = preprocess_data(folder_name, pub_refs, pub_names, date_ref_1, date_ref_2)
+subset_df = preprocess_data(folder_name, pub_refs, pub_names, 70)
 
 # Save the subset dataframe to a CSV file
 subset_df.to_csv('subset.csv')
