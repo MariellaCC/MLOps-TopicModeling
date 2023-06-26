@@ -59,7 +59,7 @@ def preprocess_corpus(bigrams):
     return id2word, corpus
 
 
-def train_lda_model(corpus, id2word, num_topics=7, random_state=100):
+def train_lda_model(corpus, id2word, num_topics=5, random_state=100, chunksize=100, passes=10):
     """
     Train an LDA model on the given corpus.
 
@@ -73,7 +73,8 @@ def train_lda_model(corpus, id2word, num_topics=7, random_state=100):
         gensim.models.LdaModel: The trained LDA model.
 
     """
-    model = LdaModel(corpus, id2word=id2word, num_topics=num_topics, random_state=random_state, eval_every=None)
+    model = LdaModel(corpus, id2word=id2word, num_topics=num_topics, random_state=random_state, chunksize=chunksize,
+                                      passes=passes, eval_every=None)
     return model
 
 
