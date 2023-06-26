@@ -87,9 +87,25 @@ def calculate_coherence(lda_model, bigrams, corpus, id2word):
     Returns:
         float: The coherence value.
     """
-    coherencemodel = CoherenceModel(model=lda_model, texts=bigrams, corpus=corpus, dictionary=id2word, coherence='u_mass')
+    coherencemodel = CoherenceModel(model=lda_model, texts=bigrams, corpus=corpus, dictionary=id2word, coherence='c_v')
     coherence_value = coherencemodel.get_coherence()
     return coherence_value
+
+def compute_perplexity(lda_model, corpus):
+    """
+    Computes perplexity value for the given LDA model.
+
+    Args:
+        lda_model (gensim.models.LdaModel): The LDA model.
+        corpus (list): The corpus.
+
+    Returns:
+        float: The perplexity value.
+    """
+    
+    perplexity = lda_model.log_perplexity(corpus)
+    return perplexity
+
 
 # File paths
 corpus_model_file = 'corpus_model.csv'
@@ -98,17 +114,22 @@ corpus_model_file = 'corpus_model.csv'
 current_directory = os.getcwd()
 lda_model_file = os.path.join(current_directory, 'lda_model')  # Construct the path to the LDA model file
 
-# Load corpus model
-bigrams = load_corpus_model(corpus_model_file)
+if __name__ == '__main__':
+    # Load corpus model
+    bigrams = load_corpus_model(corpus_model_file)
 
-# Preprocess data
-id2word, corpus = preprocess_data(bigrams)
+    # Preprocess data
+    id2word, corpus = preprocess_data(bigrams)
 
-# Load LDA model
-lda = load_lda_model(lda_model_file)
+    # Load LDA model
+    lda = load_lda_model(lda_model_file)
 
-# Calculate coherence
-coherence_value = calculate_coherence(lda, bigrams, corpus, id2word)
+    # Calculate coherence
+    coherence_value = calculate_coherence(lda, bigrams, corpus, id2word)
 
-# Print coherence value
-print(coherence_value)
+    # Print coherence value
+    print(coherence_value)
+
+    # Compute perplexity
+    perplexity_score = compute_perplexity(lda, corpus)
+    print(perplexity_score)
