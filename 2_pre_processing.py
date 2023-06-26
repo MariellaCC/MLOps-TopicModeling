@@ -73,13 +73,21 @@ def load_stopwords(filename):
     Load stopwords from a CSV file.
     
     Args:
-        filename (str): The name of the CSV file.
+        filename (str): The name of the CSV file containing custom stopwords.
     
     Returns:
         list: The stopwords as a list of strings.
     """
     stopwords_df = pd.read_csv(filename)
-    return stopwords_df['stopword'].values.tolist()
+    
+    
+    ital_stopwords = stopwords.words('italian')
+    en_stopwords = stopwords.words('english')
+    custom_stopwords = stopwords_df['stopword'].values.tolist()
+    custom_stopwords.extend(en_stopwords)
+    custom_stopwords.extend(ital_stopwords)
+
+    return custom_stopwords
 
 def remove_stopwords(dataframe, column_name, stopwords):
     """
