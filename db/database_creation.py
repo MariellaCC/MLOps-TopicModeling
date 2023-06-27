@@ -8,7 +8,7 @@ url_object = URL.create(
     "mysql+pymysql",
     username="root",
     password="password",
-    host="172.17.0.1",
+    host="localhost",
     database="DB",
 )
 
