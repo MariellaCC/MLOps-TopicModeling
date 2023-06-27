@@ -3,7 +3,7 @@ import pandas as pd
 import nltk
 from nltk.tokenize import word_tokenize
 from gensim.models.phrases import Phrases, Phraser
-from pre_processing import load_data, tokenize_documents, preprocess_tokens, load_stopwords
+from 2_pre_processing import load_data, tokenize_documents, preprocess_tokens, load_stopwords
 
 # Set the current directory
 current_directory = os.getcwd()
