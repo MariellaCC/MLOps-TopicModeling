@@ -10,8 +10,6 @@ RUN pip install -r requirements.txt
 
 COPY api.py pre_processing.py data_ingestion.py kpi.py ./
 
-COPY stop_words.csv subset.csv lda_model ./
-
-COPY ./CI_newspaper_subcorpora ./CI_newspaper_subcorpora
+COPY stop_words.csv subset.csv lda_model lda_model.state lda_model.id2word lda_model.expElogbeta.npy ./
 
 CMD ["uvicorn","api:app","--host","0.0.0.0","--port","8000"]

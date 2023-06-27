@@ -1,0 +1,8 @@
+FROM mysql/mysql-server
+
+ENV MYSQL_DATABASE=DB \
+    MYSQL_ROOT_PASSWORD=password \
+    MYSQL_ROOT_HOST=%
+ADD ./db/schema.sql /docker-entrypoint-initdb.d
+COPY ./db/database_creation.py /app/database_creation.py
+EXPOSE 3306
