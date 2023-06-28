@@ -1,12 +1,3 @@
-import pandas as pd
-import gensim
-from gensim.models import LdaModel
-from gensim.models.coherencemodel import CoherenceModel
-from gensim.test.utils import datapath
-from ast import literal_eval
-from gensim import corpora
-import os
-
 """
 1. The code defines several functions to perform specific tasks:
 • load_corpus_model(file_path): This function loads the corpus model from a CSV file, where each row contains preprocessed data in the form of bigrams. It returns the preprocessed data as a list of bigrams.
@@ -132,3 +123,5 @@ if __name__ == "__main__":
     print(coherence_value)
 
     perplexity_score = compute_perplexity(lda, corpus)
+
+    print(perplexity_score)
