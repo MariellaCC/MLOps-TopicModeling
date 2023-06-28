@@ -13,6 +13,8 @@ services:
       - start_bdd           
     image: bdd:latest
     container_name: bdd
+    ports:
+      - "3306:3306" 
 
 
 
