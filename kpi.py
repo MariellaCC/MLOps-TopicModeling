@@ -26,6 +26,8 @@ import pandas as pd
 import gensim
 from gensim.models import LdaModel
 from gensim.models.coherencemodel import CoherenceModel
+from gensim.models.hdpmodel import HdpModel
+
 from gensim.test.utils import datapath
 from ast import literal_eval
 from gensim import corpora
@@ -91,6 +93,21 @@ def calculate_coherence(lda_model, bigrams, corpus, id2word):
     coherence_value = coherencemodel.get_coherence()
     return coherence_value
 
+def compute_perplexity(lda_model, corpus):
+    """
+    Computes perplexity value for the given LDA model.
+
+    Args:
+        lda_model (gensim.models.LdaModel): The LDA model.
+        corpus (list): The corpus.
+
+    Returns:
+        float: The perplexity value.
+    """
+    
+    perplexity = lda_model.log_perplexity(corpus)
+    return perplexity
+
 if __name__ == "__main__":
 # File paths
     corpus_model_file = 'corpus_model.csv'
@@ -113,3 +130,5 @@ if __name__ == "__main__":
 
 # Print coherence value
     print(coherence_value)
+
+    perplexity_score = compute_perplexity(lda, corpus)

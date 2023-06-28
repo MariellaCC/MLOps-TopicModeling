@@ -2,25 +2,25 @@ version: "3.9"
 
 services:
 
-  start_api:
-    image: api:latest
-    container_name: start
-    networks:
-      - my_test_network
+  start_bdd:
+    image: local-mysql:latest
+    container_name: sql 
+    ports:
+      - "3306:3306" 
 
-
-
-  Test_authentification:
+  fill_bdd:
     depends_on:
-      - start_api           
-    image: test:latest
-    container_name: test1
-    networks:
-      - my_test_network
-    environment:
-      - LOG='1'
+      - start_bdd           
+    image: bdd:latest
+    container_name: bdd
 
 
-     
-networks:
-  my_test_network:
+
+  start_api:
+    depends_on:
+      - fill_bdd           
+    image: api:latest
+    container_name: api
+    ports:
+      - "8000:8000"  
+

@@ -3,7 +3,6 @@ import pandas as pd
 import nltk
 from nltk.tokenize import word_tokenize
 from gensim.models.phrases import Phrases, Phraser
-
 from 2_pre_processing import load_data, tokenize_documents, preprocess_tokens, load_stopwords
 
 

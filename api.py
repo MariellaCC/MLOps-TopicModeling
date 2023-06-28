@@ -16,7 +16,7 @@ import re
 from sqlalchemy import URL, create_engine, inspect, text
 from data_ingestion import read_txt_content, get_date, get_ref, get_files_list, preprocess_data
 from pre_processing import load_data,tokenize_documents, preprocess_tokens, load_stopwords, remove_stopwords, create_bigrams, save_dataframe
-from kpi import load_corpus_model, preprocess_data_kpi, load_lda_model, calculate_coherence
+from kpi import load_corpus_model, preprocess_data_kpi, load_lda_model, calculate_coherence, compute_perplexity
 import nltk 
 import duckdb
 import secrets
@@ -31,17 +31,19 @@ url_object = URL.create(
     "mysql+pymysql",
     username="root",
     password="password",
-    host="localhost",
+    #host="localhost",
+    host="172.17.0.1",
     database="DB",
 )
 engine = create_engine(url_object)
 
 connection = mysql.connector.connect(username="root",
     password="password",
-    host="localhost",
+    #host="localhost",
+    host="172.17.0.2",
     database="DB"
     )
-cursor = connection.cursor()
+
 
 
 app = FastAPI()
@@ -68,20 +70,21 @@ def get_current_username(
         )
     return credentials.username
 
-class topic(BaseModel):
-    num_topic: int = 2
-    date_ref_1 :str = "1930-06-06"
-    date_ref_2 : str = "1931-05-01"
+#class topic(BaseModel):
+#    num_topic: int = 2
+#    date_ref_1 :str = "1930-06-06"
+#    date_ref_2 : str = "1931-05-01"
 
 class database(BaseModel):
-    file_name: str = 'b'
-    file_content: str = 'b'
-    date: str = 'b'
-    publication_name: str = 'b'
-    publication_ref: str = 'b'
+    file_name: str = 'test_file'
+    file_content: str = 'Mattia è un bimbo di 5 anni che passa tutte le sue giornate a disegnare. In realtà Mattia non si impegna più del necessario per tratteggiare le linee, fare bene le forme o rendere somiglianti le persone che disegna. Mattia ama soprattutto colorare, e ad ogni persona o cosa che disegna associa dei colori specifici. Ogni qual volta disegna suo papà Giuseppe, ad esempio, usa sempre gli stessi colori: i capelli li fa in nero, la maglia è azzurra e i pantaloni rigorosamente rossi. Il papà di Mattia non si veste ovviamente con colori così sgargianti, ma a Mattia piace immaginarlo così.'
+    date: str = '2001'
+    publication_name: str = 'test'
+    publication_ref: str = 'test'
+    num_topic: int = 2
 
 class read_db(BaseModel):
-    date: str = '1930-12-20'
+    file_name: str = 'test_file'
  
 
 
@@ -91,31 +94,55 @@ def Say_hello():
          
     return "Hello, I'm working"
 
-@app.post('/text')
-def get_body_from_publication(read_db:read_db):
-    query = text(f"SELECT * FROM sources WHERE date = '{read_db.date}'")
-    with engine.connect() as conn:
-        result = conn.execute(query)
-    lis=[]
-    for row in result:
-        lis.append(row)
-    corps=[]
-    file_name =[]
-    for i in range (len(lis)):    
-        corps.append(lis[i][5])
-    for i in range (len(lis)): 
-        file_name.append(lis[i][1])
-    dic = { file_name[i] : corps[i]  for i in range (len(lis))}
-    return dic
 
 
-@app.post('/topic')
-def get_topic(topic:topic,username: Annotated[str, Depends(get_current_username)]):
-    #data ingestion
+
+#@app.post('/topic')
+#def get_topic(topic:topic,username: Annotated[str, Depends(get_current_username)]):
+#    #data ingestion
+#    
+#    #subset_df = preprocess_data(folder_name, pub_refs, pub_names, topic.date_ref_1, topic.date_ref_2)
+#    #subset_df.to_csv('subset.csv')
+#    query = text(f"SELECT * FROM sources WHERE date <= DATE '{topic.date_ref_2}' AND date > DATE '{topic.date_ref_1}'")
+#    corpus_df = pd.read_sql_query(query, engine) 
+#    #pre process
+#    #corpus_df = load_data('subset.csv')
+#    corpus_df = tokenize_documents(corpus_df, 'file_content')
+#    corpus_df = preprocess_tokens(corpus_df, 'tokens')
+#    stopwords = load_stopwords('stop_words.csv')
+#    corpus_df = remove_stopwords(corpus_df, 'doc_prep', stopwords)
+#    # Create bigrams
+#    corpus_df = create_bigrams(corpus_df, 'doc_prep_nostop')
+#    # Save processed data
+#    save_dataframe(corpus_df['bigrams'], 'corpus_model.csv')
+#
+#    #kpi
+#
+#    corpus_model_file = 'corpus_model.csv'
+#    current_directory = os.getcwd()
+#    lda_model_file = os.path.join(current_directory, 'lda_model')  # Construct the path to the LDA model file
+#    bigrams = load_corpus_model(corpus_model_file)
+#    #dans le fichier kpi il faut renommer la fonction preprocess_data en preprocess_date_kpi sinon elle porte le même nom que celle pour la data ingestion
+#    id2word, corpus = preprocess_data_kpi(bigrams)
+#    lda = load_lda_model(lda_model_file)
+#
+#    topic_print_model = lda.print_topics(num_words=topic.num_topic)
+#    coherence_value = calculate_coherence(lda, bigrams, corpus, id2word)
+#    dic = { topic_print_model[i][0] : topic_print_model[i][1]  for i in range (7)}
+#    
+#    return {'topic':dic, 'coherence':coherence_value}
+
+@app.put('/topic')
+def add_data_and_get_topic(database:database):
+    cursor = connection.cursor()
+    query2 = f"""INSERT INTO new_text (file_name,file_content,date,publication_name,publication_ref) VALUES ('{database.file_name}','{database.file_content}','{database.date}','{database.publication_name}','{database.publication_ref}')"""
+    cursor.execute(query2)
+    connection.commit()
+    cursor.close()
+    #return{cursor.rowcount: "Record inserted successfully into Laptop table"}
     
-    #subset_df = preprocess_data(folder_name, pub_refs, pub_names, topic.date_ref_1, topic.date_ref_2)
-    #subset_df.to_csv('subset.csv')
-    query = text(f"SELECT * FROM sources WHERE date <= DATE '{topic.date_ref_2}' AND date > DATE '{topic.date_ref_1}'")
+  
+    query = text(f"SELECT * FROM new_text WHERE file_name = '{database.file_name}'")
     corpus_df = pd.read_sql_query(query, engine) 
     #pre process
     #corpus_df = load_data('subset.csv')
@@ -138,19 +165,28 @@ def get_topic(topic:topic,username: Annotated[str, Depends(get_current_username)
     id2word, corpus = preprocess_data_kpi(bigrams)
     lda = load_lda_model(lda_model_file)
 
-    topic_print_model = lda.print_topics(num_words=topic.num_topic)
+    topic_print_model = lda.print_topics(num_words=database.num_topic)
     coherence_value = calculate_coherence(lda, bigrams, corpus, id2word)
-    dic = { topic_print_model[i][0] : topic_print_model[i][1]  for i in range (7)}
-    
-    return {'topic':dic, 'coherence':coherence_value}
-
-@app.put('/database')
-def add_data(database:database):
-    query2 = f"""INSERT INTO sources (file_name,file_content,date,publication_name,publication_ref) VALUES ('{database.file_name}','{database.file_content}','{database.date}','{database.publication_name}','{database.publication_ref}')"""
+    #perplexity_score = compute_perplexity(lda, corpus)
+    cursor = connection.cursor()
+    query2 = f"""INSERT INTO metrics (file_name,timestamp,coherence,perplexity) VALUES ('{database.file_name}',"timestamp",'{coherence_value}',"5")"""
     cursor.execute(query2)
     connection.commit()
     cursor.close()
-    return{cursor.rowcount: "Record inserted successfully into Laptop table"}
-    
-    
 
+    dic = { topic_print_model[i][0] : topic_print_model[i][1]  for i in range (7)}
+    
+    return {'topic':dic, 'coherence':coherence_value}
+    #return {'topic':dic, 'coherence':coherence_value,'perplexity':perplexity_score}
+
+@app.post('/topic/metrics')
+def get_metrics_from_publication(read_db:read_db):
+    query = text(f"SELECT * FROM metrics WHERE file_name = '{read_db.file_name}'")
+    with engine.connect() as conn:
+        result = conn.execute(query)
+    lis=[]
+    for row in result:
+        lis.append(row)
+    test = ['file_name','timestamp','coherence']
+    dic = { test[i] : lis[0][i]  for i in range (len(test))}
+    return dic

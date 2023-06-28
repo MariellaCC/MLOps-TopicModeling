@@ -8,3 +8,8 @@ WORKDIR /app/
 
 RUN pip install -r requirements.txt
 
+COPY ./db/database_creation.py ./
+
+COPY ./db/CI_newspaper_subcorpora ./CI_newspaper_subcorpora
+
+CMD ["python","database_creation.py"]
