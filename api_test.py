@@ -3,7 +3,7 @@ import requests
 #from requests.auth import HTTPBasicAuth
 
 def test_api_working():
-    response = requests.get('http://localhost:8000/')
+    response = requests.get('http://127.0.0.1:8000/')
     assert response.json() == "Hello, I'm working"
 
 
