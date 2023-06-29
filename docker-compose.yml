@@ -1,26 +1,9 @@
 version: "3.9"
 
 services:
-  start_api:
-    depends_on:
-      - fill_bdd
-    restart: on-failure:15
-    build:
-      context: .
-      dockerfile: dockerfile_api
-    ports:
-      - "8000:8002"
-
-  fill_bdd:
-    depends_on:
-      - tm_db
-    restart: on-failure:5
-    build:
-      context: .
-      dockerfile: dockerfile_fill_bdd
 
   tm_db:
-    image: mysql:5.7
+    image: mysql:latest
     volumes:
       - ./db:/docker-entrypoint-initdb.d
     environment:
@@ -28,8 +11,30 @@ services:
       MYSQL_TCP_PORT: 3306
     ports:
       - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "tm_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
+  fill_bdd:
+    depends_on:
+      tm_db:
+        condition: service_healthy
+    build:
+      context: .
+      dockerfile: dockerfile_fill_bdd
 
+  start_api:
+    depends_on:
+      fill_bdd:
+        condition: service_completed_successfully
+    restart: on-failure:15
+    build:
+      context: .
+      dockerfile: dockerfile_api
+    ports:
+      - "8000:8002"
 
 
 # version: "3.9"

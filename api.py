@@ -39,6 +39,7 @@ url_object = URL.create(
     username="root",
     password="password",
     host="tm_db",  # Use the service name defined in docker-compose.yml
+    #host="localhost",  # Use the service name defined in docker-compose.yml
     port=3306,     # Use the MySQL container's exposed port
     database="DB",
 )
@@ -48,6 +49,7 @@ connection = mysql.connector.connect(
     user="root",
     password="password",
     host="tm_db",  # Use the service name defined in docker-compose.yml
+    #host="localhost",  # Use the service name defined in docker-compose.yml
     port=3306,     # Use the MySQL container's exposed port
     database="DB"
 )
@@ -172,7 +174,9 @@ def add_data_and_get_topic(database:database):
     lda = load_lda_model(lda_model_file)
 
     topic_print_model = lda.print_topics(num_words=database.num_topic)
+    print(topic_print_model)
     coherence_value = calculate_coherence(lda, bigrams, corpus, id2word)
+    print(coherence_value)
     #perplexity_score = compute_perplexity(lda, corpus)
     cursor = connection.cursor()
     query2 = f"""INSERT INTO metrics (file_name,timestamp,coherence,perplexity) VALUES ('{database.file_name}',"timestamp",'{coherence_value}',"5")"""
@@ -180,7 +184,7 @@ def add_data_and_get_topic(database:database):
     connection.commit()
     cursor.close()
 
-    dic = { topic_print_model[i][0] : topic_print_model[i][1]  for i in range(7)}
+    dic = { topic_print_model[i][0] : topic_print_model[i][1]  for i in range(5)}
     
     return {'topic':dic, 'coherence':coherence_value}
     #return {'topic':dic, 'coherence':coherence_value,'perplexity':perplexity_score}
@@ -193,6 +197,21 @@ def get_metrics_from_publication(read_db:read_db):
     lis=[]
     for row in result:
         lis.append(row)
+       
     test = ['file_name','timestamp','coherence']
-    dic = { test[i] : lis[0][i]  for i in range (len(test))}
+    dic = { test[i] : lis[0][i]  for i in range(len(test))}
+    return dic
+
+@app.get('/doc/topics_probability')
+def get_prob_from_publication():
+    query = text(f"select * from sources LIMIT 5")
+    with engine.connect() as conn:
+        result = conn.execute(query)
+    lis=[]
+    #print(result)
+    for row in result:
+        print(row)
+        lis.append(row)
+    #test = ['file_name','timestamp','coherence']
+    dic = { 'result': lis[0][5]}
     return dic
