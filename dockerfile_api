@@ -1,15 +1,14 @@
 FROM python:3.10-slim
 
-RUN apt-get update && apt-get install python3-pip -y
+RUN apt-get update && apt-get install -y python3-pip
 
 COPY ./requirements.txt /app/requirements.txt
 
-WORKDIR /app/
+WORKDIR /app
 
 RUN pip install -r requirements.txt
 
 COPY api.py pre_processing.py data_ingestion.py kpi.py ./
-
 COPY stop_words.csv subset.csv lda_model lda_model.state lda_model.id2word lda_model.expElogbeta.npy ./
 
-CMD ["uvicorn","api:app","--host","0.0.0.0","--port","8000"]
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8002"]

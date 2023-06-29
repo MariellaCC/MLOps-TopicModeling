@@ -27,24 +27,30 @@ import mysql.connector
 nltk.download('punkt')
 nltk.download('stopwords')
 
+import nltk
+from sqlalchemy import create_engine
+import mysql.connector
+
+nltk.download('punkt')
+nltk.download('stopwords')
+
 url_object = URL.create(
     "mysql+pymysql",
     username="root",
     password="password",
-    #host="localhost",
-    host="172.17.0.1",
+    host="tm_db",  # Use the service name defined in docker-compose.yml
+    port=3306,     # Use the MySQL container's exposed port
     database="DB",
 )
 engine = create_engine(url_object)
 
-connection = mysql.connector.connect(username="root",
+connection = mysql.connector.connect(
+    user="root",
     password="password",
-    #host="localhost",
-    host="172.17.0.2",
+    host="tm_db",  # Use the service name defined in docker-compose.yml
+    port=3306,     # Use the MySQL container's exposed port
     database="DB"
-    )
-
-
+)
 
 app = FastAPI()
 security = HTTPBasic()
@@ -174,7 +180,7 @@ def add_data_and_get_topic(database:database):
     connection.commit()
     cursor.close()
 
-    dic = { topic_print_model[i][0] : topic_print_model[i][1]  for i in range (7)}
+    dic = { topic_print_model[i][0] : topic_print_model[i][1]  for i in range(7)}
     
     return {'topic':dic, 'coherence':coherence_value}
     #return {'topic':dic, 'coherence':coherence_value,'perplexity':perplexity_score}
