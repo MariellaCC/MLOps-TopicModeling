@@ -48,7 +48,11 @@ As an underlying workflow, we selected the project <i>Topic Modelling with Gensi
 • Set up a CI/CD pipeline to automate the building, testing, and deployment processes with Github actions.
 
 
-<img width="679" alt="image" src="https://github.com/MariellaCC/MLOps-TopicModeling/assets/83060092/4d221c25-93f2-42bc-b260-f3d355d591b6">
+![markmap](https://github.com/MariellaCC/MLOps-TopicModeling/assets/83060092/e9edd822-2837-47b1-824d-acdc8ed63d2e)
+
+## Implementation Logical Worflow: Technical Architecture 
+
+![MLOps Topic Modeling Diagram](https://github.com/MariellaCC/MLOps-TopicModeling/assets/83060092/59550731-6359-4a68-a777-c4fbe51a8e2e)
 
 
 ## References
