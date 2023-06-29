@@ -1,7 +1,8 @@
 name: Control Push
-on: push
-  branches:
-    - "refactor_mlla"
+on: 
+  push:
+    branches:
+      - refactor_mlla
 jobs:
   qa:
     name: Check tests
