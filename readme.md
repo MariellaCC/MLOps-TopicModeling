@@ -55,6 +55,16 @@ As an underlying workflow, we selected the project <i>Topic Modelling with Gensi
 
 ![MLOps Topic Modeling Diagram](https://github.com/MariellaCC/MLOps-TopicModeling/assets/83060092/59550731-6359-4a68-a777-c4fbe51a8e2e)
 
+## AirFlow: Graph View
+
+<img width="603" alt="airflow graph view" src="https://github.com/MariellaCC/MLOps-TopicModeling/assets/83060092/a5607683-281b-463f-b132-2369d5d146e5">
+
+## AirFlow: Tree View
+
+As an example: metrics are bad starting from June 29, 17:56 which starts the retraining process.
+
+<img width="1254" alt="airflow tree view" src="https://github.com/MariellaCC/MLOps-TopicModeling/assets/83060092/8d60ebb5-e62b-4769-8afd-42b20e5f9147">
+
 
 ## References
 
