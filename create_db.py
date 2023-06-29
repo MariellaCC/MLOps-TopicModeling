@@ -1,6 +1,6 @@
 import mysql.connector
 import sqlalchemy
-from sqlalchemy import create_engine
+from sqlalchemy import URL, create_engine
 from sqlalchemy_utils import database_exists, create_database
 import os
 import re
@@ -12,16 +12,19 @@ import pandas as pd
 
 
 
-user= "root"
-pwd= "password"
-host = 'tm_db'
-port = "3306"
+
+url_object = URL.create(
+    "mysql+mysqlconnector",
+    username="root",
+    password="password",
+    host="tm_db",
+    #host="172.17.0.1",
+    database="DB",
+)
+
+engine = create_engine(url_object)
 
 
-
-engine = 'mysql+mysqlconnector://{0}:{1}@{2}:{3}'.format(user, pwd, host, port)
-# if not database_exists(engine):
-#     create_database(engine)
 
 
 
@@ -109,7 +112,7 @@ def create_dataset(folder_name, pub_refs, pub_names, n):
         pandas.DataFrame: Preprocessed data subset.
     """
     folder_path = os.path.abspath(folder_name)
-    files_list_flat = get_files_list(folder_name)
+    files_list_flat = get_files_list(folder_path)
 
     sources = pd.DataFrame(files_list_flat, columns=['file_name'])
     sources['date'] = sources['file_name'].apply(get_date)

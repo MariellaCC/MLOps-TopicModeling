@@ -3,7 +3,6 @@ services:
     # start_api:
     #   depends_on:
     #     - fill_bdd
-    #     - db
     #   build: 
     #       context: ./
     #       dockerfile: dockerfile_api          
@@ -12,16 +11,18 @@ services:
     fill_bdd:
         depends_on:
             - tm_db
-        #restart: on-failure
+        restart: on-failure:5
         build: 
           context: ./
           dockerfile: dockerfile_tmdb
     tm_db:
         image: mysql:5.7
         restart: always
+        command: --init-file init.sql
+        volumes:
+            - ./init.sql:/data/application/init.sql
         environment:
             MYSQL_ROOT_PASSWORD: password
-            MYSQL_DATABASE: DB
             MYSQL_TCP_PORT: 3307
         ports:
           - 3307:3306
