@@ -11,15 +11,12 @@ import pandas as pd
 #connection = mysql.connector.connect(host = 'db', password = 'password', database="DB")
 
 
-
-
 url_object = URL.create(
     "mysql+mysqlconnector",
     username="root",
     password="password",
     host="tm_db",
-    #host="172.17.0.1",
-    database="DB",
+    database="DB"
 )
 
 engine = create_engine(url_object)
