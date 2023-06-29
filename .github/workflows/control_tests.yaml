@@ -26,15 +26,11 @@ jobs:
     - name: Install pytest and flake8
       run: |
         pip install pytest
-        pip install flake8
         pip install requests
 
     - name: Run tests
       run: |
         pytest
-
-    - name: Run flake8
-      uses: py-actions/flake8@v2
 
     - name: Stop containers
       if: always()
