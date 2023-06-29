@@ -1,13 +1,13 @@
 version: "3.9"
 services:
-    # start_api:
-    #   depends_on:
-    #     - fill_bdd
-    #   build: 
-    #       context: ./
-    #       dockerfile: dockerfile_api          
-    #   ports:
-    #     - "8002:8002"
+    start_api:
+      depends_on:
+        - fill_bdd
+      build: 
+          context: ./
+          dockerfile: dockerfile_api          
+      ports:
+        - "8002:8002"
     fill_bdd:
         depends_on:
             - tm_db
