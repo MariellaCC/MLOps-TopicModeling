@@ -7,4 +7,4 @@
 /Topic
 /.pytest_cache
 /db/CI_newspaper_subcorpora
-
+/airflow_TopicModeling/logs
