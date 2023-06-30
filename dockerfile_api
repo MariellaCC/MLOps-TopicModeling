@@ -8,6 +8,7 @@ WORKDIR /app
 
 RUN pip install -r requirements.txt
 
+COPY ./api_modules ./api_modules
 COPY api.py pre_processing.py data_ingestion.py kpi.py ./
 COPY stop_words.csv subset.csv lda_model lda_model.state lda_model.id2word lda_model.expElogbeta.npy ./
 
