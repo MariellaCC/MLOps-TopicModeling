@@ -228,7 +228,8 @@ def metrics_new_texts(n: Annotated[int, Path(description="Enter number of texts.
         lis.append(row[5])
     
     lda_model = api_modules.load_lda_model('lda_model')
-    id2word = 'lda_model.id2word'
+
+    id2word = api_modules.load_lda_model('lda_model.id2word')
 
     topics, perplexity, coherence, alert = api_modules.compute_metrics(lis,lda_model,id2word,threshold_coherence=0.38,threshold_perplexity=-10)
 
