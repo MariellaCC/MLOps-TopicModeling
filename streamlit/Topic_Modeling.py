@@ -11,7 +11,7 @@ st.set_page_config(page_title="Topic Modeling",page_icon='🌍',layout="wide", i
 #Barre de Navigation 
 st.sidebar.title('Navigation')
 #Différentes pages du site 
-pages = ['Introduction','Cahier des charges','API','Base de données','Isolation' , 'Testing et Monitoring', 'Interface Graphique ']
+pages = ['Accueil','Introduction','Base de données','API','Isolation' , 'Tests unitaires', 'Monitoring', 'Conclusion', 'Interface Graphique ']
 page = st.sidebar.radio(' ',pages)
 
                                                     #Page 1: Introduction 
@@ -45,9 +45,9 @@ Présentation de topic modeling
 présentation des données 
 présentation du but de l'api 
     """)
-    st.image('cdc.png', width = 1200)
+    
 
-if page == pages[2]:
+if page == pages[3]:
 
     st.markdown("<h1 style='text-align: center; color: green;'>API</h1>", unsafe_allow_html=True)
     st.markdown("<h2 style='text-align: center; '>Présentation de l'API</h1>", unsafe_allow_html=True)
@@ -56,19 +56,19 @@ if page == pages[2]:
     Sortie: topics & metrics
     
     """)
-    st.image('streamlit_images/api_1.png', width = 1200)
+    st.image('streamlit/streamlit_images/api_1.png', width = 1200)
     st.write(""" 
     Première route: test fonctionnment de l'API
     
     """)
-    st.image('streamlit_images/api_2.png', width = 1200)
+    st.image('streamlit/streamlit_images/api_2.png', width = 1200)
     st.write(""" 
     Deuxième route\n
     Entrée: new texte \n
     Sortie: topics & metrics
     
     """)
-    st.image('streamlit_images/api_3.png', width = 1200)
+    st.image('streamlit/streamlit_images/api_3.png', width = 1200)
     st.write(""" 
     Troisième route\n
     Entrée: existing test \n
@@ -81,7 +81,7 @@ if page == pages[2]:
     st.markdown("<h2 style='text-align: center; '>Démo</h1>", unsafe_allow_html=True)
     st.write(""" http://localhost:8000/docs""")
 
-if page == pages[3]:
+if page == pages[2]:
 
     st.markdown("<h1 style='text-align: center; color: green;'>Base de données</h1>", unsafe_allow_html=True)
     st.markdown("<h2 style='text-align: center; '>SQL</h1>", unsafe_allow_html=True)
@@ -94,13 +94,16 @@ Il reste donc à choisir entre Mysql et Hbase
 Pour moi, dans notre cas, vu que nous traitons de données open source, et que nous n'avons pas de données d'utilisateurs à stocker/sécuriser, il me semble que nous n'avons pas besoin d'un système de réplication des données comme proposé par Hbase. Par ailleurs, notre taille de données n'est pas massive.
     
     """)
+    st.image('streamlit/streamlit_images/bdd_sources.png', width = 1200)
+    st.image('streamlit/streamlit_images/bdd_metrics.png', width = 600)
+
 
 if page == pages[4]:
 
-    st.markdown("<h1 style='text-align: center; color: green;'>Architecture</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: green;'>Isolation</h1>", unsafe_allow_html=True)
     st.markdown("<h2 style='text-align: center; '>Docker</h1>", unsafe_allow_html=True)
     st.write(""" 
-    explication choix BDD
+    DOckerfile Création Base de Donnée
     
     """)
     st.code(""" FROM mysql/mysql-server
@@ -111,25 +114,97 @@ if page == pages[4]:
     COPY ./db/database_creation.py /app/database_creation.py
     EXPOSE 3306""", language='sql')
 
+    st.write(""" 
+    DOckerfile Remplissage Base de Donnée
+    
+    """)
+
     st.code(""" FROM python:3.10-slim
-    RUN apt-get update && apt-get install python3-pip -y
+    RUN apt-get update && apt-get install -y python3-pip
     COPY ./requirements.txt /app/requirements.txt
-    WORKDIR /app/
+    WORKDIR /app
     RUN pip install -r requirements.txt
-    COPY api.py pre_processing.py data_ingestion.py kpi.py ./
+    COPY ./db/database_creation.py ./
+    COPY ./db/CI_newspaper_subcorpora ./CI_newspaper_subcorpora
+    CMD ["python", "database_creation.py"]""", language='sql')
+
+    st.write(""" 
+    DOckerfile API
+    
+    """)
+
+    st.code(""" FROM python:3.10-slim
+    RUN apt-get update && apt-get install -y python3-pip
+    COPY ./requirements.txt /app/requirements.txt
+    WORKDIR /app
+    RUN pip install -r requirements.txt
+    COPY ./api_modules ./api_modules
+    COPY api.py ./
+    COPY ./python_code ./python_code
     COPY stop_words.csv subset.csv lda_model lda_model.state lda_model.id2word lda_model.expElogbeta.npy ./
-    CMD ["uvicorn","api:app","--host","0.0.0.0","--port","8000"]""", language='sql')
+    CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8002"]""", language='sql')
+
+    st.write(""" 
+    DOcker-Compose
+    
+    """)
+
+    st.code(""" version: "3.9"
+services:
+
+  tm_db:
+    image: mysql:latest
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_ROOT_PASSWORD: "password"
+      MYSQL_TCP_PORT: 3306
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "tm_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  fill_bdd:
+    depends_on:
+      tm_db:
+        condition: service_healthy
+    build:
+      context: .
+      dockerfile: dockerfile_fill_bdd
+
+  start_api:
+    depends_on:
+      fill_bdd:
+        condition: service_completed_successfully
+    restart: on-failure:15
+    build:
+      context: .
+      dockerfile: dockerfile_api
+    ports:
+      - "8000:8002" """, language='sql')
+if page == pages[5]:
+    st.markdown("<h1 style='text-align: center; color: green;'>Test Unitaires</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: green;'>GitHub Actions</h1>", unsafe_allow_html=True)
+    st.write("https://github.com/MariellaCC/MLOps-TopicModeling/actions")
 
 if page == pages[6]:
-    data = {
-    "file_name": "test_file",
-    "file_content": "Mattia è un bimbo di 5 anni che passa tutte le sue giornate a disegnare. In realtà Mattia non si impegna più del necessario per tratteggiare le linee, fare bene le forme o rendere somiglianti le persone che disegna. Mattia ama soprattutto colorare, e ad ogni persona o cosa che disegna associa dei colori specifici. Ogni qual volta disegna suo papà Giuseppe, ad esempio, usa sempre gli stessi colori: i capelli li fa in nero, la maglia è azzurra e i pantaloni rigorosamente rossi. Il papà di Mattia non si veste ovviamente con colori così sgargianti, ma a Mattia piace immaginarlo così.",
-    "date": "2001",
-    "publication_name": "test",
-    "publication_ref": "test",
-    "num_topic": 2
-                }
-    if st.button('Send request'):   
+    st.markdown("<h1 style='text-align: center; color: green;'>Monitoring</h1>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: green;'>AirFlow</h1>", unsafe_allow_html=True)
+if page == pages[7]:
+    st.markdown("<h1 style='text-align: center; color: green;'>Conclusion</h1>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: green;'>Architecture Globale</h1>", unsafe_allow_html=True)
+    st.image('streamlit/streamlit_images/architecture.jpeg',width=1200)
+if page == pages[8]:
+    st.markdown("<h1 style='text-align: center; color: green;'>Interface Graphique</h1>", unsafe_allow_html=True)
 
-        r = requests.put('http://localhost:8000/topic', json=data)
+    
+    if st.button('API is working ?'): 
+        r = requests.get('http://localhost:8000/')
+        st.write(r.json())
+
+    if st.button('metrics for 10 random texts'): 
+        r = requests.put('http://localhost:8000/doc/update_model_metrics/10/')
         st.write(r.json())

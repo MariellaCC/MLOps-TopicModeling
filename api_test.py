@@ -7,17 +7,21 @@ def test_api_working():
     assert response.json() == "Hello, I'm working"
 
 
-def test_coherence_type():
-
-    data = {
-  "num_topic": 2,
-  "date_ref_1": "1940-06-06",
-  "date_ref_2": "1941-05-01"
-}
-    r = requests.post('http://localhost:8000/topic', json=data, auth=HTTPBasicAuth('admin', 'mdp'))
+def test_update_model_metrics():
+    #data = {'n': 10}
+    r = requests.post('http://localhost:8000/doc/update_model_metrics/10/')
     assert type(r.json()['coherence']) == float
-
-def test_user():
-
-    r = requests.post('http://localhost:8000/topic', auth=HTTPBasicAuth('fdmin', 'mdp'))
-    assert list(r.json().values())[0] == 'Incorrect email or password'
+#def test_coherence_type():
+#
+#    data = {
+#  "num_topic": 2,
+#  "date_ref_1": "1940-06-06",
+#  "date_ref_2": "1941-05-01"
+#}
+#    r = requests.post('http://localhost:8000/topic', json=data, auth=HTTPBasicAuth('admin', 'mdp'))
+#    assert type(r.json()['coherence']) == float
+#
+#def test_user():
+#
+#    r = requests.post('http://localhost:8000/topic', auth=HTTPBasicAuth('fdmin', 'mdp'))
+#    assert list(r.json().values())[0] == 'Incorrect email or password'
