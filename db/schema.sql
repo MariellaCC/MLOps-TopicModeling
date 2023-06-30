@@ -20,7 +20,6 @@ CREATE TABLE `new_text` (
   `publication_ref` varchar(255)
 );
 CREATE TABLE `metrics` (
-  `file_name` varchar(255) NOT NULL,
   `timestamp` varchar(255) NOT NULL,
   `coherence` decimal,
   `perplexity` decimal
