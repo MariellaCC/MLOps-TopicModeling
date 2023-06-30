@@ -3,7 +3,7 @@ import gensim
 from gensim.models import LdaModel
 from gensim.models.coherencemodel import CoherenceModel
 from nltk.corpus import stopwords
-from fastapi import FastAPI, Depends, HTTPException, status, Header
+from fastapi import FastAPI, Depends, HTTPException, status, Header, Path
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel
 import pandas as pd 
@@ -22,6 +22,8 @@ import duckdb
 import secrets
 from typing import Annotated
 import mysql.connector
+import api_modules
+import datetime
 
 
 nltk.download('punkt')
@@ -214,4 +216,32 @@ def get_prob_from_publication():
         lis.append(row)
     #test = ['file_name','timestamp','coherence']
     dic = { 'result': lis[0][5]}
+    return dic
+
+@app.put('/doc/update_model_metrics/{n}/')
+def metrics_new_texts(n: Annotated[int, Path(description="Enter number of texts.")]):
+    query = text(f"select * from new_text LIMIT {n}")
+    with engine.connect() as conn:
+        result = conn.execute(query)
+    lis=[]
+    for row in result:
+        lis.append(row[5])
+    
+    lda_model = api_modules.load_lda_model('lda_model')
+    id2word = 'lda_model.id2word'
+
+    topics, perplexity, coherence, alert = api_modules.compute_metrics(lis,lda_model,id2word,threshold_coherence=0.38,threshold_perplexity=-10)
+
+    now = str(datetime.datetime.now())
+
+    cursor = connection.cursor()
+    query2 = f"""INSERT INTO metrics (timestamp,coherence,perplexity) VALUES ({now},'{coherence}',{perplexity})"""
+    cursor.execute(query2)
+    connection.commit()
+    cursor.close()
+
+    dic = { 'topics': topics,
+           'perplexity': perplexity,
+           'coherence': coherence,
+           'alert': alert}
     return dic
