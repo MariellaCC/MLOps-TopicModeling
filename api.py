@@ -80,10 +80,7 @@ def get_current_username(
         )
     return credentials.username
 
-#class topic(BaseModel):
-#    num_topic: int = 2
-#    date_ref_1 :str = "1930-06-06"
-#    date_ref_2 : str = "1931-05-01"
+
 
 class database(BaseModel):
     file_name: str = 'test_file'
@@ -105,59 +102,6 @@ def Say_hello():
     return "Hello, I'm working"
 
 
-
-
-#@app.post('/topic')
-#def get_topic(topic:topic,username: Annotated[str, Depends(get_current_username)]):
-#    #data ingestion
-#    
-#    #subset_df = preprocess_data(folder_name, pub_refs, pub_names, topic.date_ref_1, topic.date_ref_2)
-#    #subset_df.to_csv('subset.csv')
-#    query = text(f"SELECT * FROM sources WHERE date <= DATE '{topic.date_ref_2}' AND date > DATE '{topic.date_ref_1}'")
-#    corpus_df = pd.read_sql_query(query, engine) 
-#    #pre process
-#    #corpus_df = load_data('subset.csv')
-#    corpus_df = tokenize_documents(corpus_df, 'file_content')
-#    corpus_df = preprocess_tokens(corpus_df, 'tokens')
-#    stopwords = load_stopwords('stop_words.csv')
-#    corpus_df = remove_stopwords(corpus_df, 'doc_prep', stopwords)
-#    # Create bigrams
-#    corpus_df = create_bigrams(corpus_df, 'doc_prep_nostop')
-#    # Save processed data
-#    save_dataframe(corpus_df['bigrams'], 'corpus_model.csv')
-#
-#    #kpi
-#
-#    corpus_model_file = 'corpus_model.csv'
-#    current_directory = os.getcwd()
-#    lda_model_file = os.path.join(current_directory, 'lda_model')  # Construct the path to the LDA model file
-#    bigrams = load_corpus_model(corpus_model_file)
-#    #dans le fichier kpi il faut renommer la fonction preprocess_data en preprocess_date_kpi sinon elle porte le même nom que celle pour la data ingestion
-#    id2word, corpus = preprocess_data_kpi(bigrams)
-#    lda = load_lda_model(lda_model_file)
-#
-#    topic_print_model = lda.print_topics(num_words=topic.num_topic)
-#    coherence_value = calculate_coherence(lda, bigrams, corpus, id2word)
-#    dic = { topic_print_model[i][0] : topic_print_model[i][1]  for i in range (7)}
-#    
-#    return {'topic':dic, 'coherence':coherence_value}
-
-
-
-
-#@app.get('/doc/topics_probability')
-#def get_prob_from_publication():
-#    query = text(f"select * from sources LIMIT 5")
-#    with engine.connect() as conn:
-#        result = conn.execute(query)
-#    lis=[]
-#    #print(result)
-#    for row in result:
-#        print(row)
-#        lis.append(row)
-#    #test = ['file_name','timestamp','coherence']
-#    dic = { 'result': lis[0][5]}
-#    return dic
 
 @app.put('/doc/update_model_metrics/{n}/')
 def metrics_new_texts(n: Annotated[int, Path(description="Enter number of texts.")],username: Annotated[str, Depends(get_current_username)]):
@@ -224,7 +168,7 @@ def add_data_and_get_topic(database:database,username: Annotated[str, Depends(ge
     cursor.execute(query2)
     connection.commit()
     cursor.close()
-    #return{cursor.rowcount: "Record inserted successfully into Laptop table"}
+    
     
   
     query = text(f"SELECT * FROM new_text WHERE file_name = '{database.file_name}'")
@@ -239,41 +183,11 @@ def add_data_and_get_topic(database:database,username: Annotated[str, Depends(ge
     topics, perplexity, coherence, alert = api_modules.compute_metrics(list(corpus_df['file_content']),lda_model,id2word,threshold_coherence=0.38,threshold_perplexity=-10)
     coherence = simplejson.dumps(coherence, ignore_nan=True)
     if coherence == 'null':
-        coherence = 0
-    ##pre process
-    ##corpus_df = load_data('subset.csv')
-    #corpus_df = tokenize_documents(corpus_df, 'file_content')
-    #corpus_df = preprocess_tokens(corpus_df, 'tokens')
-    #stopwords = load_stopwords('stop_words.csv')
-    #corpus_df = remove_stopwords(corpus_df, 'doc_prep', stopwords)
-    ## Create bigrams
-    #corpus_df = create_bigrams(corpus_df, 'doc_prep_nostop')
-    ## Save processed data
-    #save_dataframe(corpus_df['bigrams'], 'corpus_model.csv')
-#
-    ##kpi
-#
-    #corpus_model_file = 'corpus_model.csv'
-    #current_directory = os.getcwd()
-    #lda_model_file = os.path.join(current_directory, 'lda_model')  # Construct the path to the LDA model file
-    #bigrams = load_corpus_model(corpus_model_file)
-    ##dans le fichier kpi il faut renommer la fonction preprocess_data en preprocess_date_kpi sinon elle porte le même nom que celle pour la data ingestion
-    #id2word, corpus = preprocess_data_kpi(bigrams)
-    #lda = load_lda_model(lda_model_file)
-
-    #topic_print_model = lda.print_topics(num_words=database.num_topic)
-    #print(topic_print_model)
-    #coherence_value = calculate_coherence(lda, bigrams, corpus, id2word)
-    #print(coherence_value)
-    #perplexity_score = compute_perplexity(lda, corpus)
+        coherence = 0    
     cursor = connection.cursor()
     query2 = f"""INSERT INTO metrics (timestamp,coherence,perplexity) VALUES ("timestamp",'{coherence}','{perplexity}')"""
     cursor.execute(query2)
     connection.commit()
     cursor.close()
 
-    #dic = { topics[i][0] : topics[i][1]  for i in range(5)}
-    print(coherence)
- 
-    #return {'topic':dic, 'coherence':coherence_value}
     return {'topics':topics,'coherence':coherence,'perplexity':perplexity}
