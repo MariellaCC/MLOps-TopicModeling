@@ -273,13 +273,11 @@ def retrain_model(texts, topic_nr):
     coherence_values_gensim = []
     perplexitys = []
     models = []
-    models_idx = [x for x in range(topic_nr[0],topic_nr[1])]
     for num_topics in range(topic_nr[0],topic_nr[1]):
         model = LdaModel(corpus, id2word=id2word, num_topics=num_topics, eval_every = None, chunksize=100,
                                           passes=10,random_state=100)
         models.append(model)
-        coherencemodel = CoherenceModel(model=model, texts=corpus_df, dictionary=id2word, coherence='c_v')
-        coherence_value = coherencemodel.get_coherence()
+        coherence_value = compute_coherence(model, corpus_df['bigrams'], corpus, id2word)
         perplexity = model.log_perplexity(corpus)
         perplexitys.append(perplexity)
         coherence_values_gensim.append(coherence_value)
