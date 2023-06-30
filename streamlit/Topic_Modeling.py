@@ -101,6 +101,39 @@ if page == pages[2]:
     SQL is enough for this project
    
     """)
+    st.write("""Database is created in two steps\n
+    1- Create empty database with 3 tables
+    """)
+
+    st.code(""" DROP DATABASE IF EXISTS `DB`;
+CREATE DATABASE `DB`;
+USE `DB`;
+DROP TABLE IF EXISTS `sources`;
+DROP TABLE IF EXISTS `new_text`;
+DROP TABLE IF EXISTS `metrics`;
+CREATE TABLE `sources` (
+  `file_name` varchar(255) NOT NULL,
+  `file_content` text,
+  `date` varchar(10),
+  `publication_name` varchar(255),
+  `publication_ref` varchar(255)
+);
+
+CREATE TABLE `new_text` (
+  `file_name` varchar(255) NOT NULL,
+  `file_content` text,
+  `date` varchar(10),
+  `publication_name` varchar(255),
+  `publication_ref` varchar(255)
+);
+CREATE TABLE `metrics` ( 
+  `timestamp` varchar(255) NOT NULL,
+  `coherence` decimal(8),
+  `perplexity` decimal(8)
+);""", language='sql')
+    st.write("""    
+    2- Insert text in database with python script""")
+
     st.write(""" Sources database structure""")
             
     st.image('streamlit/streamlit_images/bdd_sources.png', width = 1200)
