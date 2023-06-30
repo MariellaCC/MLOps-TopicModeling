@@ -14,9 +14,9 @@ from gensim import corpora
 import os
 import re 
 from sqlalchemy import URL, create_engine, inspect, text
-from data_ingestion import read_txt_content, get_date, get_ref, get_files_list, preprocess_data
-from pre_processing import load_data,tokenize_documents, preprocess_tokens, load_stopwords, remove_stopwords, create_bigrams, save_dataframe
-from kpi import load_corpus_model, preprocess_data_kpi, load_lda_model, calculate_coherence, compute_perplexity
+from python_code.data_ingestion import read_txt_content, get_date, get_ref, get_files_list, preprocess_data
+from python_code.pre_processing import load_data,tokenize_documents, preprocess_tokens, load_stopwords, remove_stopwords, create_bigrams, save_dataframe
+from python_code.kpi import load_corpus_model, preprocess_data_kpi, load_lda_model, calculate_coherence, compute_perplexity
 import nltk 
 import duckdb
 import secrets

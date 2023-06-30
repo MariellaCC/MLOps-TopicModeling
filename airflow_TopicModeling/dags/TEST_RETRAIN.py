@@ -4,6 +4,7 @@ from airflow.utils.dates import days_ago
 from airflow.operators.python import PythonOperator, BranchPythonOperator
 import datetime
 import pandas as pd
+from python_code.model_training import load_corpus_model, preprocess_corpus, train_lda_model, save_model
 
 my_dag = DAG(
     dag_id='model_retraining',
