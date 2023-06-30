@@ -265,7 +265,7 @@ def retrain_model(texts, topic_nr):
     # Create bigrams
     corpus_df = create_bigrams(corpus_df, 'doc_prep_nostop')
 
-    id2word = get_id2word(corpus_df)
+    id2word = get_id2word(corpus_df['bigrams'])
 
     corpus = get_bow(id2word,corpus_df['bigrams'])
 

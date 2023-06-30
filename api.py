@@ -249,12 +249,12 @@ def metrics_new_texts(n: Annotated[int, Path(description="Enter number of texts.
 
 @app.get('/doc/retrain_model/{nr_topic_min}/{nr_topic_max}/{n}')
 def retrain_model(nr_topic_min: Annotated[int, Path(description="Enter min number of topics.")],nr_topic_max: Annotated[int, Path(description="Enter max number of topics.")],n: Annotated[int, Path(description="Enter number of texts.")]):
+    
     query = text(f"select * from sources LIMIT {n}")
     with engine.connect() as conn:
         result = conn.execute(query)
     lis=[]
-    print('hello')
-    print(len(lis))
+
     for row in result:
         lis.append(row[5])
     
