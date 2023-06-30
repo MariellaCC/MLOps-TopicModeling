@@ -236,7 +236,7 @@ def metrics_new_texts(n: Annotated[int, Path(description="Enter number of texts.
     now = str(datetime.datetime.now())
 
     cursor = connection.cursor()
-    query2 = f"""INSERT INTO metrics (timestamp,coherence,perplexity) VALUES ({now},'{coherence}',{perplexity})"""
+    query2 = f"""INSERT INTO metrics (timestamp,coherence,perplexity) VALUES ('{now}','{coherence}','{perplexity}')"""
     cursor.execute(query2)
     connection.commit()
     cursor.close()
