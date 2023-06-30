@@ -21,6 +21,6 @@ CREATE TABLE `new_text` (
 );
 CREATE TABLE `metrics` ( 
   `timestamp` varchar(255) NOT NULL,
-  `coherence` decimal(3),
-  `perplexity` decimal(3)
+  `coherence` decimal(8),
+  `perplexity` decimal(8)
 );

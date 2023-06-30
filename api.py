@@ -24,7 +24,7 @@ from typing import Annotated
 import mysql.connector
 import api_modules
 import datetime
-
+import simplejson
 
 nltk.download('punkt')
 nltk.download('stopwords')
@@ -88,10 +88,10 @@ def get_current_username(
 class database(BaseModel):
     file_name: str = 'test_file'
     file_content: str = 'Mattia è un bimbo di 5 anni che passa tutte le sue giornate a disegnare. In realtà Mattia non si impegna più del necessario per tratteggiare le linee, fare bene le forme o rendere somiglianti le persone che disegna. Mattia ama soprattutto colorare, e ad ogni persona o cosa che disegna associa dei colori specifici. Ogni qual volta disegna suo papà Giuseppe, ad esempio, usa sempre gli stessi colori: i capelli li fa in nero, la maglia è azzurra e i pantaloni rigorosamente rossi. Il papà di Mattia non si veste ovviamente con colori così sgargianti, ma a Mattia piace immaginarlo così.'
-    date: str = '2001'
+    date: str = '2001-05-03'
     publication_name: str = 'test'
     publication_ref: str = 'test'
-    num_topic: int = 2
+   
 
 class read_db(BaseModel):
     file_name: str = 'test_file'
@@ -142,8 +142,83 @@ def Say_hello():
 #    
 #    return {'topic':dic, 'coherence':coherence_value}
 
-@app.put('/topic')
-def add_data_and_get_topic(database:database):
+
+
+
+#@app.get('/doc/topics_probability')
+#def get_prob_from_publication():
+#    query = text(f"select * from sources LIMIT 5")
+#    with engine.connect() as conn:
+#        result = conn.execute(query)
+#    lis=[]
+#    #print(result)
+#    for row in result:
+#        print(row)
+#        lis.append(row)
+#    #test = ['file_name','timestamp','coherence']
+#    dic = { 'result': lis[0][5]}
+#    return dic
+
+@app.put('/doc/update_model_metrics/{n}/')
+def metrics_new_texts(n: Annotated[int, Path(description="Enter number of texts.")],username: Annotated[str, Depends(get_current_username)]):
+    query = text(f"select * from new_text LIMIT {n}")
+    with engine.connect() as conn:
+        result = conn.execute(query)
+    lis=[]
+    for row in result:
+        lis.append(row[5])
+    
+    lda_model = api_modules.load_lda_model('lda_model')
+
+    id2word = api_modules.load_lda_model('lda_model.id2word')
+
+    topics, perplexity, coherence, alert = api_modules.compute_metrics(lis,lda_model,id2word,threshold_coherence=0.38,threshold_perplexity=-10)
+
+    now = str(datetime.datetime.now())
+
+    cursor = connection.cursor()
+    query2 = f"""INSERT INTO metrics (timestamp,coherence,perplexity) VALUES ('{now}','{coherence}','{perplexity}')"""
+    cursor.execute(query2)
+    connection.commit()
+    cursor.close()
+
+    dic = { 'topics': topics,
+           'perplexity': perplexity,
+           'coherence': coherence,
+           'alert': alert}
+    return dic
+
+@app.post('/get_metrics')
+def get_metrics_from_publication(username: Annotated[str, Depends(get_current_username)]):
+    query = text(f"SELECT * FROM metrics ")
+    with engine.connect() as conn:
+        result = conn.execute(query)
+    lis=[]
+    for row in result:
+        lis.append(row)
+       
+    test = ['timestamp','coherence','perplexity']
+    
+    return {test[i] : lis[j][i]  for j in range(len(lis)) for i in range(len(test)) }
+
+@app.get('/doc/retrain_model/{nr_topic_min}/{nr_topic_max}/{n}')
+def retrain_model(nr_topic_min: Annotated[int, Path(description="Enter min number of topics.")],nr_topic_max: Annotated[int, Path(description="Enter max number of topics.")],n: Annotated[int, Path(description="Enter number of texts.")], username: Annotated[str, Depends(get_current_username)]):
+    
+    query = text(f"select * from sources LIMIT {n}")
+    with engine.connect() as conn:
+        result = conn.execute(query)
+    lis=[]
+
+    for row in result:
+        lis.append(row[5])
+    
+    res_df = api_modules.retrain_model(lis, [nr_topic_min,nr_topic_max])
+
+    return res_df.to_dict(orient="records")
+
+
+@app.put('/get_topic_from_new_text')
+def add_data_and_get_topic(database:database,username: Annotated[str, Depends(get_current_username)]):
     cursor = connection.cursor()
     query2 = f"""INSERT INTO new_text (file_name,file_content,date,publication_name,publication_ref) VALUES ('{database.file_name}','{database.file_content}','{database.date}','{database.publication_name}','{database.publication_ref}')"""
     cursor.execute(query2)
@@ -154,14 +229,17 @@ def add_data_and_get_topic(database:database):
   
     query = text(f"SELECT * FROM new_text WHERE file_name = '{database.file_name}'")
     corpus_df = pd.read_sql_query(query, engine) 
-    print(list(corpus_df['file_content']))
+    
+    print(corpus_df['file_content'])
 
     lda_model = api_modules.load_lda_model('lda_model')
 
     id2word = api_modules.load_lda_model('lda_model.id2word')
 
     topics, perplexity, coherence, alert = api_modules.compute_metrics(list(corpus_df['file_content']),lda_model,id2word,threshold_coherence=0.38,threshold_perplexity=-10)
-    
+    coherence = simplejson.dumps(coherence, ignore_nan=True)
+    if coherence == 'null':
+        coherence = 0
     ##pre process
     ##corpus_df = load_data('subset.csv')
     #corpus_df = tokenize_documents(corpus_df, 'file_content')
@@ -194,78 +272,8 @@ def add_data_and_get_topic(database:database):
     connection.commit()
     cursor.close()
 
-    dic = { topics[i][0] : topics[i][1]  for i in range(5)}
+    #dic = { topics[i][0] : topics[i][1]  for i in range(5)}
     print(coherence)
+ 
     #return {'topic':dic, 'coherence':coherence_value}
-    return {'coherence':coherence,'perplexity':perplexity}
-
-@app.post('/topic/metrics')
-def get_metrics_from_publication():
-    query = text(f"SELECT * FROM metrics ")
-    with engine.connect() as conn:
-        result = conn.execute(query)
-    lis=[]
-    for row in result:
-        lis.append(row)
-       
-    test = ['timestamp','coherence','perplexity']
-    dic = { test[i] : lis[j][i]  for j in range(len(lis)) for i in range(len(test)) }
-    return dic
-
-#@app.get('/doc/topics_probability')
-#def get_prob_from_publication():
-#    query = text(f"select * from sources LIMIT 5")
-#    with engine.connect() as conn:
-#        result = conn.execute(query)
-#    lis=[]
-#    #print(result)
-#    for row in result:
-#        print(row)
-#        lis.append(row)
-#    #test = ['file_name','timestamp','coherence']
-#    dic = { 'result': lis[0][5]}
-#    return dic
-
-@app.put('/doc/update_model_metrics/{n}/')
-def metrics_new_texts(n: Annotated[int, Path(description="Enter number of texts.")]):
-    query = text(f"select * from new_text LIMIT {n}")
-    with engine.connect() as conn:
-        result = conn.execute(query)
-    lis=[]
-    for row in result:
-        lis.append(row[5])
-    
-    lda_model = api_modules.load_lda_model('lda_model')
-
-    id2word = api_modules.load_lda_model('lda_model.id2word')
-
-    topics, perplexity, coherence, alert = api_modules.compute_metrics(lis,lda_model,id2word,threshold_coherence=0.38,threshold_perplexity=-10)
-
-    now = str(datetime.datetime.now())
-
-    cursor = connection.cursor()
-    query2 = f"""INSERT INTO metrics (timestamp,coherence,perplexity) VALUES ('{now}','{coherence}','{perplexity}')"""
-    cursor.execute(query2)
-    connection.commit()
-    cursor.close()
-
-    dic = { 'topics': topics,
-           'perplexity': perplexity,
-           'coherence': coherence,
-           'alert': alert}
-    return dic
-
-@app.get('/doc/retrain_model/{nr_topic_min}/{nr_topic_max}/{n}')
-def retrain_model(nr_topic_min: Annotated[int, Path(description="Enter min number of topics.")],nr_topic_max: Annotated[int, Path(description="Enter max number of topics.")],n: Annotated[int, Path(description="Enter number of texts.")]):
-    
-    query = text(f"select * from sources LIMIT {n}")
-    with engine.connect() as conn:
-        result = conn.execute(query)
-    lis=[]
-
-    for row in result:
-        lis.append(row[5])
-    
-    res_df = api_modules.retrain_model(lis, [nr_topic_min,nr_topic_max])
-
-    return res_df.to_dict(orient="records")
+    return {'topics':topics,'coherence':coherence,'perplexity':perplexity}
