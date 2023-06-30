@@ -11,7 +11,7 @@ st.set_page_config(page_title="Topic Modeling",page_icon='🌍',layout="wide", i
 #Barre de Navigation 
 st.sidebar.title('Navigation')
 #Différentes pages du site 
-pages = ['Accueil','Introduction','Base de données','API','Isolation' , 'Tests unitaires', 'Monitoring', 'Conclusion', 'Interface Graphique ']
+pages = ['Accueil','Introduction','Base de données','API','Isolation' , 'Tests unitaires', 'Monitoring', 'Conclusion/Perspectives', 'Interface Graphique ']
 page = st.sidebar.radio(' ',pages)
 
                                                     #Page 1: Introduction 
@@ -58,32 +58,31 @@ if page == pages[3]:
     st.markdown("<h1 style='text-align: center; color: green;'>API</h1>", unsafe_allow_html=True)
     st.markdown("<h2 style='text-align: center; '>Présentation de l'API</h1>", unsafe_allow_html=True)
     st.write(""" 
-    Entrée: 1 texte \n
-    Sortie: topics & metrics
+    Première route: Vérifie que l'API fonctionne 
     
     """)
     st.image('streamlit/streamlit_images/api_1.png', width = 1200)
     st.write(""" 
-    Première route: test fonctionnment de l'API
+    Deuxième : Choisis n textes et retourne les topics, les métriques de perplexité et cohérence, ainsi qu'une alerte si métriques trop basses
     
     """)
     st.image('streamlit/streamlit_images/api_2.png', width = 1200)
     st.write(""" 
-    Deuxième route\n
-    Entrée: new texte \n
-    Sortie: topics & metrics
+    Troisième route: renvoie les dernières métriques calculées 
     
     """)
     st.image('streamlit/streamlit_images/api_3.png', width = 1200)
     st.write(""" 
-    Troisième route\n
-    Entrée: existing test \n
-    Sortie: topics & metrics
-    
+    Quatrième route: réentraine le modèle pour un nombre n de textes avec nr_topic_num le minimum de topic voulu et nr_topic_max le nombre maximum voulu et retourne les métriques pour chaque nombre de topics     
     
     """)
-    st.markdown("<h2 style='text-align: center; '>Sécurité de l'API</h1>", unsafe_allow_html=True)
-    st.write("blabblalba")
+
+    st.image('streamlit/streamlit_images/api_4.png', width = 1200)
+    st.write(""" 
+    Cinquième route: ajoute un texte dans la base de donnée et retourne les topics et métriques     
+    
+    """)
+    st.image('streamlit/streamlit_images/api_5.png', width = 1200)
     st.markdown("<h2 style='text-align: center; '>Démo</h1>", unsafe_allow_html=True)
     st.write(""" http://localhost:8000/docs""")
 
@@ -191,10 +190,42 @@ services:
       dockerfile: dockerfile_api
     ports:
       - "8000:8002" """, language='sql')
+    
+
 if page == pages[5]:
+    
     st.markdown("<h1 style='text-align: center; color: green;'>Test Unitaires</h1>", unsafe_allow_html=True)
-    st.markdown("<h1 style='text-align: center; color: green;'>GitHub Actions</h1>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: green;'>GitHub Actions</h1>", unsafe_allow_html=True)
     st.write("https://github.com/MariellaCC/MLOps-TopicModeling/actions")
+    st.code("""def test_api_working():
+    response = requests.get('http://localhost:8000/')
+    assert response.json() == "Hello, I'm working"
+
+def test_update_model_metrics():
+    
+    r = requests.put('http://localhost:8000/doc/update_model_metrics/10/', auth=HTTPBasicAuth('admin', 'mdp'))
+    assert type(r.json()['coherence']) == float
+
+def test_metrics():
+
+    r = requests.post('http://localhost:8000/get_metrics', auth=HTTPBasicAuth('admin', 'mdp'))
+    assert len(r.json()) == 3
+
+def test_topic_from_new_text():
+    data = {
+  "file_name": "test_file",
+  "file_content": "Mattia è un bimbo di 5 anni che passa tutte le sue giornate a disegnare. In realtà Mattia non si impegna più del necessario per tratteggiare le linee, fare bene le forme o rendere somiglianti le persone che disegna. Mattia ama soprattutto colorare, e ad ogni persona o cosa che disegna associa dei colori specifici. Ogni qual volta disegna suo papà Giuseppe, ad esempio, usa sempre gli stessi colori: i capelli li fa in nero, la maglia è azzurra e i pantaloni rigorosamente rossi. Il papà di Mattia non si veste ovviamente con colori così sgargianti, ma a Mattia piace immaginarlo così.",
+  "date": "2001-05-03",
+  "publication_name": "test",
+  "publication_ref": "test"
+}
+    r = requests.put('http://localhost:8000/get_topic_from_new_text', json=data, auth=HTTPBasicAuth('admin', 'mdp'))
+    assert type(r.json()['perplexity']) == float
+
+def test_user():
+
+    r = requests.put('http://localhost:8000/get_topic_from_new_text', auth=HTTPBasicAuth('fdmin', 'mdp'))
+    assert r.json()['detail'] == 'Incorrect email or password'""", language='python' )
 
 if page == pages[6]:
 
@@ -211,7 +242,7 @@ if page == pages[7]:
     st.markdown("<h1 style='text-align: center; color: green;'>Conclusion</h1>", unsafe_allow_html=True)
     st.markdown("<h2 style='text-align: center; color: green;'>Architecture Globale</h1>", unsafe_allow_html=True)
     st.image('streamlit/streamlit_images/architecture.jpeg',width=1200)
-
+    st.markdown("<h1 style='text-align: center; color: green;'>Perspectives</h1>", unsafe_allow_html=True)
 
 if page == pages[8]:
     st.markdown("<h1 style='text-align: center; color: green;'>Interface Graphique</h1>", unsafe_allow_html=True)
