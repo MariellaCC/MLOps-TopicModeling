@@ -19,7 +19,7 @@ CREATE TABLE `new_text` (
   `publication_name` varchar(255),
   `publication_ref` varchar(255)
 );
-CREATE TABLE `metrics` (
+CREATE TABLE `metrics` ( 
   `timestamp` varchar(255) NOT NULL,
   `coherence` decimal,
   `perplexity` decimal

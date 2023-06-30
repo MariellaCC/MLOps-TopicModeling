@@ -1,6 +1,0 @@
-FROM python:3.9
-COPY ./create_db.py .
-RUN mkdir -p CI_newspaper_subcorpora
-ADD CI_newspaper_subcorpora CI_newspaper_subcorpora
-RUN pip install mysql-connector-python pandas sqlalchemy sqlalchemy_utils
-CMD ["python", "create_db.py"]
