@@ -154,69 +154,77 @@ def add_data_and_get_topic(database:database):
   
     query = text(f"SELECT * FROM new_text WHERE file_name = '{database.file_name}'")
     corpus_df = pd.read_sql_query(query, engine) 
-    #pre process
-    #corpus_df = load_data('subset.csv')
-    corpus_df = tokenize_documents(corpus_df, 'file_content')
-    corpus_df = preprocess_tokens(corpus_df, 'tokens')
-    stopwords = load_stopwords('stop_words.csv')
-    corpus_df = remove_stopwords(corpus_df, 'doc_prep', stopwords)
-    # Create bigrams
-    corpus_df = create_bigrams(corpus_df, 'doc_prep_nostop')
-    # Save processed data
-    save_dataframe(corpus_df['bigrams'], 'corpus_model.csv')
+    print(list(corpus_df['file_content']))
 
-    #kpi
+    lda_model = api_modules.load_lda_model('lda_model')
 
-    corpus_model_file = 'corpus_model.csv'
-    current_directory = os.getcwd()
-    lda_model_file = os.path.join(current_directory, 'lda_model')  # Construct the path to the LDA model file
-    bigrams = load_corpus_model(corpus_model_file)
-    #dans le fichier kpi il faut renommer la fonction preprocess_data en preprocess_date_kpi sinon elle porte le même nom que celle pour la data ingestion
-    id2word, corpus = preprocess_data_kpi(bigrams)
-    lda = load_lda_model(lda_model_file)
+    id2word = api_modules.load_lda_model('lda_model.id2word')
 
-    topic_print_model = lda.print_topics(num_words=database.num_topic)
-    print(topic_print_model)
-    coherence_value = calculate_coherence(lda, bigrams, corpus, id2word)
-    print(coherence_value)
+    topics, perplexity, coherence, alert = api_modules.compute_metrics(list(corpus_df['file_content']),lda_model,id2word,threshold_coherence=0.38,threshold_perplexity=-10)
+    
+    ##pre process
+    ##corpus_df = load_data('subset.csv')
+    #corpus_df = tokenize_documents(corpus_df, 'file_content')
+    #corpus_df = preprocess_tokens(corpus_df, 'tokens')
+    #stopwords = load_stopwords('stop_words.csv')
+    #corpus_df = remove_stopwords(corpus_df, 'doc_prep', stopwords)
+    ## Create bigrams
+    #corpus_df = create_bigrams(corpus_df, 'doc_prep_nostop')
+    ## Save processed data
+    #save_dataframe(corpus_df['bigrams'], 'corpus_model.csv')
+#
+    ##kpi
+#
+    #corpus_model_file = 'corpus_model.csv'
+    #current_directory = os.getcwd()
+    #lda_model_file = os.path.join(current_directory, 'lda_model')  # Construct the path to the LDA model file
+    #bigrams = load_corpus_model(corpus_model_file)
+    ##dans le fichier kpi il faut renommer la fonction preprocess_data en preprocess_date_kpi sinon elle porte le même nom que celle pour la data ingestion
+    #id2word, corpus = preprocess_data_kpi(bigrams)
+    #lda = load_lda_model(lda_model_file)
+
+    #topic_print_model = lda.print_topics(num_words=database.num_topic)
+    #print(topic_print_model)
+    #coherence_value = calculate_coherence(lda, bigrams, corpus, id2word)
+    #print(coherence_value)
     #perplexity_score = compute_perplexity(lda, corpus)
     cursor = connection.cursor()
-    query2 = f"""INSERT INTO metrics (file_name,timestamp,coherence,perplexity) VALUES ('{database.file_name}',"timestamp",'{coherence_value}',"5")"""
+    query2 = f"""INSERT INTO metrics (timestamp,coherence,perplexity) VALUES ("timestamp",'{coherence}','{perplexity}')"""
     cursor.execute(query2)
     connection.commit()
     cursor.close()
 
-    dic = { topic_print_model[i][0] : topic_print_model[i][1]  for i in range(5)}
-    
-    return {'topic':dic, 'coherence':coherence_value}
-    #return {'topic':dic, 'coherence':coherence_value,'perplexity':perplexity_score}
+    dic = { topics[i][0] : topics[i][1]  for i in range(5)}
+    print(coherence)
+    #return {'topic':dic, 'coherence':coherence_value}
+    return {'coherence':coherence,'perplexity':perplexity}
 
 @app.post('/topic/metrics')
-def get_metrics_from_publication(read_db:read_db):
-    query = text(f"SELECT * FROM metrics WHERE file_name = '{read_db.file_name}'")
+def get_metrics_from_publication():
+    query = text(f"SELECT * FROM metrics ")
     with engine.connect() as conn:
         result = conn.execute(query)
     lis=[]
     for row in result:
         lis.append(row)
        
-    test = ['file_name','timestamp','coherence']
-    dic = { test[i] : lis[0][i]  for i in range(len(test))}
+    test = ['timestamp','coherence','perplexity']
+    dic = { test[i] : lis[j][i]  for j in range(len(lis)) for i in range(len(test)) }
     return dic
 
-@app.get('/doc/topics_probability')
-def get_prob_from_publication():
-    query = text(f"select * from sources LIMIT 5")
-    with engine.connect() as conn:
-        result = conn.execute(query)
-    lis=[]
-    #print(result)
-    for row in result:
-        print(row)
-        lis.append(row)
-    #test = ['file_name','timestamp','coherence']
-    dic = { 'result': lis[0][5]}
-    return dic
+#@app.get('/doc/topics_probability')
+#def get_prob_from_publication():
+#    query = text(f"select * from sources LIMIT 5")
+#    with engine.connect() as conn:
+#        result = conn.execute(query)
+#    lis=[]
+#    #print(result)
+#    for row in result:
+#        print(row)
+#        lis.append(row)
+#    #test = ['file_name','timestamp','coherence']
+#    dic = { 'result': lis[0][5]}
+#    return dic
 
 @app.put('/doc/update_model_metrics/{n}/')
 def metrics_new_texts(n: Annotated[int, Path(description="Enter number of texts.")]):
@@ -246,3 +254,18 @@ def metrics_new_texts(n: Annotated[int, Path(description="Enter number of texts.
            'coherence': coherence,
            'alert': alert}
     return dic
+
+@app.get('/doc/retrain_model/{nr_topic_min}/{nr_topic_max}/{n}')
+def retrain_model(nr_topic_min: Annotated[int, Path(description="Enter min number of topics.")],nr_topic_max: Annotated[int, Path(description="Enter max number of topics.")],n: Annotated[int, Path(description="Enter number of texts.")]):
+    
+    query = text(f"select * from sources LIMIT {n}")
+    with engine.connect() as conn:
+        result = conn.execute(query)
+    lis=[]
+
+    for row in result:
+        lis.append(row[5])
+    
+    res_df = api_modules.retrain_model(lis, [nr_topic_min,nr_topic_max])
+
+    return res_df.to_dict(orient="records")

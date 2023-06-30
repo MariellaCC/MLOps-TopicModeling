@@ -191,12 +191,22 @@ if page == pages[5]:
     st.write("https://github.com/MariellaCC/MLOps-TopicModeling/actions")
 
 if page == pages[6]:
+
     st.markdown("<h1 style='text-align: center; color: green;'>Monitoring</h1>", unsafe_allow_html=True)
     st.markdown("<h2 style='text-align: center; color: green;'>AirFlow</h1>", unsafe_allow_html=True)
+
+    st.image('streamlit/streamlit_images/Graph_View.png', width = 1200)
+    st.image('streamlit/streamlit_images/Tree_View.png', width = 1200)
+
+
 if page == pages[7]:
+
+
     st.markdown("<h1 style='text-align: center; color: green;'>Conclusion</h1>", unsafe_allow_html=True)
     st.markdown("<h2 style='text-align: center; color: green;'>Architecture Globale</h1>", unsafe_allow_html=True)
     st.image('streamlit/streamlit_images/architecture.jpeg',width=1200)
+
+
 if page == pages[8]:
     st.markdown("<h1 style='text-align: center; color: green;'>Interface Graphique</h1>", unsafe_allow_html=True)
 
