@@ -182,10 +182,11 @@ def add_data_and_get_topic(database:database,username: Annotated[str, Depends(ge
 
     topics, perplexity, coherence, alert = api_modules.compute_metrics(list(corpus_df['file_content']),lda_model,id2word,threshold_coherence=0.38,threshold_perplexity=-10)
     coherence = simplejson.dumps(coherence, ignore_nan=True)
+    now = str(datetime.datetime.now())
     if coherence == 'null':
         coherence = 0    
     cursor = connection.cursor()
-    query2 = f"""INSERT INTO metrics (timestamp,coherence,perplexity) VALUES ("timestamp",'{coherence}','{perplexity}')"""
+    query2 = f"""INSERT INTO metrics (timestamp,coherence,perplexity) VALUES ('{now}','{coherence}','{perplexity}')"""
     cursor.execute(query2)
     connection.commit()
     cursor.close()
